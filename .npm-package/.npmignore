@@ -1,0 +1,13 @@
+# Development files
+node_modules/
+*.log
+.DS_Store
+
+# Git files
+.git/
+.gitignore
+
+# Local environment
+.env
+
+# Only include .env.example in package

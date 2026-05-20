@@ -1,0 +1,44 @@
+{
+  "name": "@kanini-software/propeliq-copilot-stub",
+  "version": "1.0.0",
+  "description": "GitHub Copilot configuration stub for PropelIQ projects",
+  "main": "index.js",
+  "bin": {
+    "propeliq-init": "./bin/init.js"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [
+    "github-copilot",
+    "ai-assistant",
+    "propeliq",
+    "configuration"
+  ],
+  "author": "KANINI Software Solutions",
+  "license": "SEE LICENSE IN LICENSE",
+  "files": [
+    ".github/**/*",
+    ".propel/**/*",
+    ".vscode/**/*",
+    ".env.example",
+    "README.md",
+    "LICENSE",
+    "bin/**/*",
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kanini-software/PropelIQ-Stub-Copilot.git"
+  },
+  "homepage": "https://www.kanini.com/propeliq",
+  "bugs": {
+    "email": "support@kanini.com"
+  }
+}
