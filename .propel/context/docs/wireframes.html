@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthPlatform — Interactive Wireframes</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-light: #EEF2FF;
+            --primary-dark: #4338CA;
+            --neutral-50: #F8FAFC;
+            --neutral-100: #F1F5F9;
+            --neutral-200: #E2E8F0;
+            --neutral-300: #CBD5E1;
+            --neutral-500: #64748B;
+            --neutral-700: #334155;
+            --neutral-900: #0F172A;
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --info: #3B82F6;
+            --radius: 8px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--neutral-50);
+            color: var(--neutral-900);
+            line-height: 1.5;
+        }
+
+        /* Navigation */
+        .app-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100vh;
+            background: #fff;
+            border-right: 1px solid var(--neutral-200);
+            overflow-y: auto;
+            z-index: 100;
+            padding: 24px 16px;
+        }
+
+        .app-nav h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .app-nav .subtitle {
+            font-size: 11px;
+            color: var(--neutral-500);
+            margin-bottom: 24px;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--neutral-500);
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--neutral-700);
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .nav-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 260px;
+            padding: 40px;
+            max-width: 1400px;
+        }
+
+        .screen-section {
+            margin-bottom: 80px;
+            scroll-margin-top: 24px;
+        }
+
+        .screen-section h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .screen-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .meta-badge.route { background: var(--primary-light); color: var(--primary-dark); }
+        .meta-badge.role { background: #DCFCE7; color: #166534; }
+        .meta-badge.epic { background: #FEF3C7; color: #92400E; }
+
+        /* Wireframe Container */
+        .wireframe {
+            background: #fff;
+            border: 1px solid var(--neutral-200);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+        }
+
+        .wireframe-header {
+            padding: 12px 20px;
+            background: var(--neutral-100);
+            border-bottom: 1px solid var(--neutral-200);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wireframe-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--neutral-300);
+        }
+
+        .wireframe-header .dot.red { background: #EF4444; }
+        .wireframe-header .dot.yellow { background: #F59E0B; }
+        .wireframe-header .dot.green { background: #22C55E; }
+
+        .wireframe-header .url {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: var(--neutral-500);
+            background: var(--neutral-50);
+            padding: 4px 12px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        .wireframe-body {
+            padding: 0;
+            min-height: 500px;
+        }
+
+        /* Responsive indicator */
+        .responsive-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .responsive-toggle button {
+            padding: 6px 14px;
+            border: 1px solid var(--neutral-200);
+            border-radius: 6px;
+            background: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .responsive-toggle button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* ====== WIREFRAME COMPONENT STYLES ====== */
+
+        /* App Shell */
+        .wf-shell {
+            display: flex;
+            height: 600px;
+        }
+
+        .wf-sidebar {
+            width: 220px;
+            background: #fff;
+            border-right: 1px solid var(--neutral-200);
+            padding: 20px 12px;
+            flex-shrink: 0;
+        }
+
+        .wf-sidebar-logo {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding: 0 8px;
+        }
+
+        .wf-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--neutral-500);
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .wf-nav-item:hover { background: var(--neutral-100); }
+        .wf-nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+        .wf-nav-icon {
+            width: 18px;
+            height: 18px;
+            background: var(--neutral-200);
+            border-radius: 4px;
+        }
+
+        .wf-nav-item.active .wf-nav-icon { background: var(--primary); opacity: 0.3; }
+
+        .wf-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .wf-topbar {
+            height: 56px;
+            border-bottom: 1px solid var(--neutral-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+
+        .wf-topbar-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .wf-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wf-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--neutral-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .wf-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .wf-page {
+            flex: 1;
+            padding: 24px;
+            background: var(--neutral-50);
+            overflow-y: auto;
+        }
+
+        /* Cards */
+        .wf-card {
+            background: #fff;
+            border: 1px solid var(--neutral-200);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .wf-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .wf-card-subtitle {
+            font-size: 12px;
+            color: var(--neutral-500);
+        }
+
+        /* Buttons */
+        .wf-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .wf-btn-primary { background: var(--primary); color: #fff; }
+        .wf-btn-secondary { background: var(--neutral-100); color: var(--neutral-700); border: 1px solid var(--neutral-200); }
+        .wf-btn-ghost { background: none; color: var(--primary); }
+        .wf-btn-danger { background: var(--error); color: #fff; }
+        .wf-btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* Inputs */
+        .wf-input-group {
+            margin-bottom: 16px;
+        }
+
+        .wf-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--neutral-700);
+            margin-bottom: 6px;
+        }
+
+        .wf-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--neutral-200);
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            color: var(--neutral-300);
+        }
+
+        .wf-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+
+        /* Badges */
+        .wf-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .wf-badge-scheduled { background: #DBEAFE; color: #1D4ED8; }
+        .wf-badge-arrived { background: #EDE9FE; color: #6D28D9; }
+        .wf-badge-progress { background: #DCFCE7; color: #166534; }
+        .wf-badge-completed { background: var(--neutral-100); color: var(--neutral-700); }
+        .wf-badge-cancelled { background: #FEE2E2; color: #991B1B; }
+        .wf-badge-noshow { background: #FEF3C7; color: #92400E; }
+
+        /* Status Dot */
+        .wf-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .wf-dot-blue { background: var(--info); }
+        .wf-dot-green { background: var(--success); }
+        .wf-dot-purple { background: #8B5CF6; }
+        .wf-dot-red { background: var(--error); }
+
+        /* Split Layout (Login) */
+        .wf-split {
+            display: flex;
+            height: 600px;
+        }
+
+        .wf-split-brand {
+            width: 45%;
+            background: var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 48px;
+            color: #fff;
+        }
+
+        .wf-split-brand h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .wf-split-brand p {
+            font-size: 15px;
+            opacity: 0.85;
+            line-height: 1.6;
+        }
+
+        .wf-split-form {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 48px;
+            background: #fff;
+        }
+
+        .wf-form {
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .wf-form h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .wf-form .subtitle {
+            font-size: 13px;
+            color: var(--neutral-500);
+            margin-bottom: 28px;
+        }
+
+        /* Table */
+        .wf-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .wf-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: var(--neutral-50);
+            color: var(--neutral-500);
+            font-weight: 500;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .wf-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--neutral-100);
+            color: var(--neutral-700);
+        }
+
+        .wf-table tr:hover td {
+            background: var(--neutral-50);
+        }
+
+        /* Chat */
+        .wf-chat {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .wf-chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--neutral-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wf-chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .wf-msg {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .wf-msg-bot {
+            align-self: flex-start;
+            background: #fff;
+            border: 1px solid var(--neutral-200);
+            border-bottom-left-radius: 4px;
+        }
+
+        .wf-msg-user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .wf-chat-input {
+            padding: 16px 20px;
+            border-top: 1px solid var(--neutral-200);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .wf-chat-input input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 24px;
+            border: none;
+            background: var(--neutral-100);
+            font-size: 14px;
+        }
+
+        .wf-send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .wf-chip-row {
+            display: flex;
+            gap: 8px;
+            padding: 0 20px 12px;
+            flex-wrap: wrap;
+        }
+
+        .wf-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .wf-chip:hover { background: var(--primary-light); }
+
+        /* Progress */
+        .wf-progress {
+            height: 4px;
+            background: var(--neutral-200);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .wf-progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        /* NER Highlights */
+        .ner-diagnosis { background: #FCA5A5; padding: 2px 4px; border-radius: 3px; }
+        .ner-medication { background: #93C5FD; padding: 2px 4px; border-radius: 3px; }
+        .ner-lab { background: #C4B5FD; padding: 2px 4px; border-radius: 3px; }
+        .ner-procedure { background: #86EFAC; padding: 2px 4px; border-radius: 3px; }
+        .ner-symptom { background: #FDBA74; padding: 2px 4px; border-radius: 3px; }
+
+        /* Grid helpers */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .gap-8 { gap: 8px; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-24 { gap: 24px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .mt-16 { margin-top: 16px; }
+        .mt-24 { margin-top: 24px; }
+        .mb-8 { margin-bottom: 8px; }
+        .mb-16 { margin-bottom: 16px; }
+        .mb-24 { margin-bottom: 24px; }
+        .p-16 { padding: 16px; }
+        .p-24 { padding: 24px; }
+        .text-sm { font-size: 12px; }
+        .text-xs { font-size: 11px; }
+        .text-muted { color: var(--neutral-500); }
+        .text-primary { color: var(--primary); }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .w-full { width: 100%; }
+
+        /* Stepper */
+        .wf-stepper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 24px;
+        }
+
+        .wf-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wf-step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .wf-step-num.active { background: var(--primary); color: #fff; }
+        .wf-step-num.done { background: var(--success); color: #fff; }
+        .wf-step-num.pending { background: var(--neutral-200); color: var(--neutral-500); }
+
+        .wf-step-label { font-size: 13px; color: var(--neutral-500); }
+        .wf-step-label.active { color: var(--primary); font-weight: 500; }
+
+        .wf-step-line {
+            flex: 1;
+            height: 2px;
+            background: var(--neutral-200);
+            margin: 0 12px;
+            min-width: 40px;
+        }
+
+        .wf-step-line.done { background: var(--success); }
+
+        /* Mermaid */
+        .mermaid-container {
+            background: #fff;
+            border: 1px solid var(--neutral-200);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        /* Mobile wireframe */
+        .wf-mobile {
+            width: 375px;
+            height: 667px;
+            border: 2px solid var(--neutral-200);
+            border-radius: 32px;
+            overflow: hidden;
+            background: #fff;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .wf-mobile-statusbar {
+            height: 44px;
+            background: var(--neutral-50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .wf-mobile-content {
+            height: calc(100% - 44px - 56px);
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .wf-mobile-bottomnav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: #fff;
+            border-top: 1px solid var(--neutral-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .wf-mobile-navitem {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            color: var(--neutral-500);
+        }
+
+        .wf-mobile-navitem.active { color: var(--primary); }
+
+        /* Annotations */
+        .annotation {
+            position: relative;
+            display: inline-block;
+        }
+
+        .annotation::after {
+            content: attr(data-note);
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--neutral-900);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .annotation:hover::after {
+            opacity: 1;
+        }
+
+        /* Section divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 48px 0 32px;
+        }
+
+        .section-divider h3 {
+            font-size: 18px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--neutral-200);
+        }
+
+        /* Document Viewer Split */
+        .wf-doc-viewer {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            height: 500px;
+        }
+
+        .wf-doc-left {
+            padding: 24px;
+            border-right: 1px solid var(--neutral-200);
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .wf-doc-right {
+            padding: 20px;
+            background: var(--neutral-50);
+            overflow-y: auto;
+        }
+
+        .wf-entity-group {
+            margin-bottom: 20px;
+        }
+
+        .wf-entity-group h5 {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .wf-entity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: #fff;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .wf-confidence {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--success);
+        }
+
+        @media (max-width: 768px) {
+            .app-nav { display: none; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Side Navigation -->
+<nav class="app-nav">
+    <h1>HealthPlatform</h1>
+    <p class="subtitle">Interactive Wireframes v1.0</p>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Architecture</div>
+        <a href="#sitemap" class="nav-link">Site Architecture</a>
+        <a href="#flows" class="nav-link">User Flows</a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Auth</div>
+        <a href="#login" class="nav-link">Login</a>
+        <a href="#register" class="nav-link">Registration</a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Patient Portal</div>
+        <a href="#pat-dashboard" class="nav-link active">Dashboard</a>
+        <a href="#pat-booking" class="nav-link">Book Appointment</a>
+        <a href="#pat-appointments" class="nav-link">My Appointments</a>
+        <a href="#pat-intake-chat" class="nav-link">Intake — Chat</a>
+        <a href="#pat-intake-form" class="nav-link">Intake — Form</a>
+        <a href="#pat-documents" class="nav-link">Documents</a>
+        <a href="#pat-docviewer" class="nav-link">Document Viewer (NER)</a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Staff Portal</div>
+        <a href="#staff-queue" class="nav-link">Queue Dashboard</a>
+        <a href="#staff-walkin" class="nav-link">Walk-in Registration</a>
+        <a href="#staff-calendar" class="nav-link">Multi-Provider Calendar</a>
+        <a href="#staff-patient360" class="nav-link">Patient 360 View</a>
+        <a href="#staff-coding" class="nav-link">Medical Coding</a>
+        <a href="#staff-conflicts" class="nav-link">Conflict Resolution</a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-title">Admin Portal</div>
+        <a href="#admin-users" class="nav-link">User Management</a>
+        <a href="#admin-audit" class="nav-link">Audit Logs</a>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+
+    <!-- ===== SITE ARCHITECTURE ===== -->
+    <section id="sitemap" class="screen-section">
+        <h2>Site Architecture</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">Information Architecture</span>
+        </div>
+        <div class="mermaid-container">
+            <pre class="mermaid">
+graph TD
+    subgraph Public
+        LOGIN[Login]
+        REGISTER[Register]
+    end
+    subgraph Patient Portal
+        P_DASH[Dashboard]
+        P_BOOK[Book Appointment]
+        P_APPTS[My Appointments]
+        P_INTAKE[Intake]
+        P_DOCS[Documents]
+        P_CAL[Calendar]
+    end
+    subgraph Staff Portal
+        S_QUEUE[Queue Dashboard]
+        S_SCHED[Schedule Management]
+        S_PAT[Patient Records]
+        S_CODE[Medical Coding]
+    end
+    subgraph Admin Portal
+        A_USERS[User Management]
+        A_AUDIT[Audit Logs]
+        A_SYS[System Health]
+    end
+    LOGIN -->|Patient| P_DASH
+    LOGIN -->|Staff| S_QUEUE
+    LOGIN -->|Admin| A_USERS
+    REGISTER --> LOGIN
+    P_DASH --> P_BOOK
+    P_DASH --> P_APPTS
+    P_DASH --> P_INTAKE
+    P_DASH --> P_DOCS
+    P_DASH --> P_CAL
+    S_QUEUE --> S_SCHED
+    S_QUEUE --> S_PAT
+    S_QUEUE --> S_CODE
+    A_USERS --> A_AUDIT
+    A_USERS --> A_SYS
+            </pre>
+        </div>
+    </section>
+
+    <!-- ===== USER FLOWS ===== -->
+    <section id="flows" class="screen-section">
+        <h2>User Flows</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">Booking Flow</span>
+            <span class="meta-badge epic">EP-002</span>
+        </div>
+        <div class="mermaid-container">
+            <pre class="mermaid">
+flowchart LR
+    A[Dashboard] -->|Book| B[Provider Selection]
+    B --> C[Date & Slot]
+    C --> D[Confirmation]
+    D -->|Success| E[Booking Complete]
+    D -->|Conflict| F[Conflict Warning]
+    F --> C
+            </pre>
+        </div>
+
+        <div class="mermaid-container">
+            <pre class="mermaid">
+flowchart LR
+    A[Appointment] -->|Start Intake| B{Chat or Form?}
+    B -->|Chat| C[AI Chat Mode]
+    B -->|Form| D[Traditional Form]
+    C -->|Switch| D
+    D --> E[Review & Submit]
+    E --> F[Complete]
+            </pre>
+        </div>
+    </section>
+
+    <!-- ===== LOGIN ===== -->
+    <section id="login" class="screen-section">
+        <h2>Login</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/login</span>
+            <span class="meta-badge role">Public</span>
+            <span class="meta-badge epic">US-014</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="url">healthplatform.app/login</span>
+            </div>
+            <div class="wireframe-body">
+                <div class="wf-split">
+                    <div class="wf-split-brand">
+                        <div style="font-size:14px;font-weight:700;margin-bottom:32px;opacity:0.9">HealthPlatform</div>
+                        <h2>Unified Patient Access & Clinical Intelligence</h2>
+                        <p>Seamless scheduling, AI-powered clinical document analysis, and intelligent intake — all in one platform.</p>
+                    </div>
+                    <div class="wf-split-form">
+                        <div class="wf-form">
+                            <h3>Sign in</h3>
+                            <p class="subtitle">Welcome back. Enter your credentials to continue.</p>
+                            <div class="wf-input-group">
+                                <label class="wf-label">Email address</label>
+                                <input type="text" class="wf-input" placeholder="you@example.com" disabled>
+                            </div>
+                            <div class="wf-input-group">
+                                <label class="wf-label">Password</label>
+                                <input type="password" class="wf-input" placeholder="••••••••" disabled>
+                            </div>
+                            <div class="flex justify-between items-center mb-16">
+                                <label class="text-sm text-muted"><input type="checkbox" disabled> Remember me</label>
+                                <a href="#" class="text-sm text-primary font-medium" style="text-decoration:none">Forgot password?</a>
+                            </div>
+                            <button class="wf-btn wf-btn-primary w-full" style="padding:12px">Sign In</button>
+                            <p class="text-sm text-muted" style="text-align:center;margin-top:16px">Don't have an account? <a href="#register" class="text-primary font-medium" style="text-decoration:none">Create one</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== REGISTRATION ===== -->
+    <section id="register" class="screen-section">
+        <h2>Registration</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/register</span>
+            <span class="meta-badge role">Public</span>
+            <span class="meta-badge epic">US-013</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/register</span>
+            </div>
+            <div class="wireframe-body">
+                <div class="wf-split">
+                    <div class="wf-split-brand">
+                        <div style="font-size:14px;font-weight:700;margin-bottom:32px;opacity:0.9">HealthPlatform</div>
+                        <h2>Join thousands of patients and providers</h2>
+                        <p>Create your account to book appointments, manage your health records, and access AI-powered clinical insights.</p>
+                    </div>
+                    <div class="wf-split-form">
+                        <div class="wf-form" style="max-width:420px">
+                            <h3>Create your account</h3>
+                            <p class="subtitle">Fill in your details to get started.</p>
+                            <div class="grid-2 mb-16" style="gap:12px">
+                                <div class="wf-input-group" style="margin:0">
+                                    <label class="wf-label">First Name</label>
+                                    <input class="wf-input" placeholder="Sarah" disabled>
+                                </div>
+                                <div class="wf-input-group" style="margin:0">
+                                    <label class="wf-label">Last Name</label>
+                                    <input class="wf-input" placeholder="Chen" disabled>
+                                </div>
+                            </div>
+                            <div class="wf-input-group">
+                                <label class="wf-label">Email</label>
+                                <input class="wf-input" placeholder="you@example.com" disabled>
+                            </div>
+                            <div class="wf-input-group">
+                                <label class="wf-label">Phone</label>
+                                <input class="wf-input" placeholder="(555) 000-0000" disabled>
+                            </div>
+                            <div class="wf-input-group">
+                                <label class="wf-label">Password</label>
+                                <input class="wf-input" placeholder="Min 12 chars, 1 upper, 1 digit, 1 special" disabled>
+                                <div style="display:flex;gap:3px;margin-top:6px">
+                                    <div style="flex:1;height:4px;border-radius:2px;background:#22C55E"></div>
+                                    <div style="flex:1;height:4px;border-radius:2px;background:#22C55E"></div>
+                                    <div style="flex:1;height:4px;border-radius:2px;background:#F59E0B"></div>
+                                    <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0"></div>
+                                </div>
+                                <div class="text-xs text-muted" style="margin-top:4px">✓ 12+ chars  ✓ Uppercase  ✓ Number  ○ Special char</div>
+                            </div>
+                            <div class="wf-input-group">
+                                <label class="wf-label">Confirm Password</label>
+                                <input class="wf-input" placeholder="Re-enter password" disabled>
+                            </div>
+                            <button class="wf-btn wf-btn-primary w-full" style="padding:12px">Create Account</button>
+                            <p class="text-sm text-muted" style="text-align:center;margin-top:12px">Already have an account? <a href="#login" class="text-primary font-medium" style="text-decoration:none">Sign in</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PATIENT DASHBOARD ===== -->
+    <section id="pat-dashboard" class="screen-section">
+        <h2>Patient Dashboard</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/dashboard</span>
+            <span class="meta-badge role">Patient</span>
+            <span class="meta-badge epic">US-027</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/dashboard</span>
+            </div>
+            <div class="wireframe-body">
+                <div class="wf-shell">
+                    <div class="wf-sidebar">
+                        <div class="wf-sidebar-logo">HealthPlatform</div>
+                        <div class="wf-nav-item active"><div class="wf-nav-icon"></div> Dashboard</div>
+                        <div class="wf-nav-item"><div class="wf-nav-icon"></div> Book Appointment</div>
+                        <div class="wf-nav-item"><div class="wf-nav-icon"></div> My Appointments</div>
+                        <div class="wf-nav-item"><div class="wf-nav-icon"></div> Intake</div>
+                        <div class="wf-nav-item"><div class="wf-nav-icon"></div> Documents</div>
+                        <div class="wf-nav-item"><div class="wf-nav-icon"></div> Calendar</div>
+                        <div class="wf-nav-item"><div class="wf-nav-icon"></div> Notifications</div>
+                    </div>
+                    <div class="wf-content">
+                        <div class="wf-topbar">
+                            <span class="wf-topbar-title">Dashboard</span>
+                            <div class="wf-topbar-actions">
+                                <div class="wf-icon-btn">🔍</div>
+                                <div class="wf-icon-btn">🔔</div>
+                                <div class="wf-avatar">SC</div>
+                            </div>
+                        </div>
+                        <div class="wf-page">
+                            <div class="mb-24">
+                                <h3 style="font-size:20px;margin-bottom:4px">Good morning, Sarah 👋</h3>
+                                <p class="text-sm text-muted">Here's what's happening with your health today.</p>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="flex gap-12 mb-24">
+                                <button class="wf-btn wf-btn-primary wf-btn-sm">📅 Book Appointment</button>
+                                <button class="wf-btn wf-btn-secondary wf-btn-sm">📄 Upload Document</button>
+                                <button class="wf-btn wf-btn-secondary wf-btn-sm">📆 View Calendar</button>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="grid-4 mb-24">
+                                <div class="wf-card">
+                                    <div class="text-xs text-muted mb-8">Next Appointment</div>
+                                    <div class="font-semibold" style="color:var(--primary);font-size:18px">May 28</div>
+                                    <div class="text-xs text-muted">10:00 AM — Dr. Patel</div>
+                                </div>
+                                <div class="wf-card">
+                                    <div class="text-xs text-muted mb-8">Pending Intake</div>
+                                    <div class="font-semibold" style="color:var(--warning);font-size:18px">1</div>
+                                    <div class="text-xs text-muted">Complete before visit</div>
+                                </div>
+                                <div class="wf-card">
+                                    <div class="text-xs text-muted mb-8">Documents</div>
+                                    <div class="font-semibold" style="color:var(--success);font-size:18px">4</div>
+                                    <div class="text-xs text-muted">2 processed, 1 pending</div>
+                                </div>
+                                <div class="wf-card">
+                                    <div class="text-xs text-muted mb-8">Notifications</div>
+                                    <div class="font-semibold" style="color:var(--info);font-size:18px">3</div>
+                                    <div class="text-xs text-muted">2 unread</div>
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Appointments -->
+                            <div class="mb-24">
+                                <div class="flex justify-between items-center mb-16">
+                                    <h4 class="font-semibold">Upcoming Appointments</h4>
+                                    <a href="#" class="text-sm text-primary font-medium" style="text-decoration:none">View all →</a>
+                                </div>
+                                <div class="flex flex-col gap-12">
+                                    <div class="wf-card flex justify-between items-center">
+                                        <div>
+                                            <div class="wf-card-title">Dr. Anand Patel · Cardiology</div>
+                                            <div class="wf-card-subtitle">May 28, 2026 · 10:00 AM</div>
+                                        </div>
+                                        <div class="flex gap-8 items-center">
+                                            <span class="wf-badge wf-badge-scheduled">Scheduled</span>
+                                            <button class="wf-btn wf-btn-ghost wf-btn-sm">Complete Intake</button>
+                                        </div>
+                                    </div>
+                                    <div class="wf-card flex justify-between items-center">
+                                        <div>
+                                            <div class="wf-card-title">Dr. Sarah Lee · Dermatology</div>
+                                            <div class="wf-card-subtitle">Jun 3, 2026 · 2:30 PM</div>
+                                        </div>
+                                        <span class="wf-badge wf-badge-scheduled">Scheduled</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== BOOKING ===== -->
+    <section id="pat-booking" class="screen-section">
+        <h2>Book Appointment — Provider Selection</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/appointments/book</span>
+            <span class="meta-badge role">Patient</span>
+            <span class="meta-badge epic">US-020</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/appointments/book</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <h3 style="font-size:20px;margin-bottom:20px">Book an Appointment</h3>
+
+                <!-- Stepper -->
+                <div class="wf-stepper">
+                    <div class="wf-step">
+                        <div class="wf-step-num active">1</div>
+                        <span class="wf-step-label active">Provider</span>
+                    </div>
+                    <div class="wf-step-line"></div>
+                    <div class="wf-step">
+                        <div class="wf-step-num pending">2</div>
+                        <span class="wf-step-label">Date & Time</span>
+                    </div>
+                    <div class="wf-step-line"></div>
+                    <div class="wf-step">
+                        <div class="wf-step-num pending">3</div>
+                        <span class="wf-step-label">Confirm</span>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="mb-24">
+                    <input class="wf-input" placeholder="🔍 Search providers by name or specialty..." disabled style="max-width:500px">
+                </div>
+
+                <!-- Provider Grid -->
+                <div class="grid-2" style="max-width:800px">
+                    <div class="wf-card" style="border:2px solid var(--primary)">
+                        <div class="flex gap-12 items-center mb-8">
+                            <div class="wf-avatar" style="width:40px;height:40px">AP</div>
+                            <div>
+                                <div class="wf-card-title">Dr. Anand Patel</div>
+                                <span class="wf-badge" style="background:var(--primary-light);color:var(--primary-dark);font-size:10px">Cardiology</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-muted mb-8">Next available: May 26, 2026</div>
+                        <button class="wf-btn wf-btn-primary wf-btn-sm">✓ Selected</button>
+                    </div>
+                    <div class="wf-card">
+                        <div class="flex gap-12 items-center mb-8">
+                            <div class="wf-avatar" style="width:40px;height:40px">SL</div>
+                            <div>
+                                <div class="wf-card-title">Dr. Sarah Lee</div>
+                                <span class="wf-badge" style="background:#DCFCE7;color:#166534;font-size:10px">Dermatology</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-muted mb-8">Next available: May 28, 2026</div>
+                        <button class="wf-btn wf-btn-secondary wf-btn-sm">Select</button>
+                    </div>
+                    <div class="wf-card">
+                        <div class="flex gap-12 items-center mb-8">
+                            <div class="wf-avatar" style="width:40px;height:40px">MJ</div>
+                            <div>
+                                <div class="wf-card-title">Dr. Maria Jones</div>
+                                <span class="wf-badge" style="background:#FEF3C7;color:#92400E;font-size:10px">General Practice</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-muted mb-8">Next available: May 24, 2026</div>
+                        <button class="wf-btn wf-btn-secondary wf-btn-sm">Select</button>
+                    </div>
+                    <div class="wf-card">
+                        <div class="flex gap-12 items-center mb-8">
+                            <div class="wf-avatar" style="width:40px;height:40px">RK</div>
+                            <div>
+                                <div class="wf-card-title">Dr. Raj Kumar</div>
+                                <span class="wf-badge" style="background:#EDE9FE;color:#6D28D9;font-size:10px">Neurology</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-muted mb-8">Next available: Jun 2, 2026</div>
+                        <button class="wf-btn wf-btn-secondary wf-btn-sm">Select</button>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-24" style="max-width:800px">
+                    <div></div>
+                    <button class="wf-btn wf-btn-primary">Continue →</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MY APPOINTMENTS ===== -->
+    <section id="pat-appointments" class="screen-section">
+        <h2>My Appointments</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/appointments</span>
+            <span class="meta-badge role">Patient</span>
+            <span class="meta-badge epic">US-022</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/appointments</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <h3 style="font-size:20px;margin-bottom:20px">My Appointments</h3>
+                <div class="flex gap-8 mb-24">
+                    <button class="wf-btn wf-btn-primary wf-btn-sm">Upcoming</button>
+                    <button class="wf-btn wf-btn-secondary wf-btn-sm">Past</button>
+                    <button class="wf-btn wf-btn-secondary wf-btn-sm">Cancelled</button>
+                </div>
+
+                <div class="flex flex-col gap-16">
+                    <div class="wf-card">
+                        <div class="flex justify-between items-center">
+                            <div class="flex gap-16 items-center">
+                                <div class="wf-avatar" style="width:44px;height:44px">AP</div>
+                                <div>
+                                    <div class="wf-card-title">Dr. Anand Patel · Cardiology</div>
+                                    <div class="wf-card-subtitle">May 28, 2026 · 10:00 – 10:30 AM · Annual checkup</div>
+                                </div>
+                            </div>
+                            <span class="wf-badge wf-badge-scheduled">Scheduled</span>
+                        </div>
+                        <div class="flex gap-8 mt-16">
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm">Complete Intake</button>
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm">Swap Slot</button>
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm">Reschedule</button>
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm" style="color:var(--error)">Cancel</button>
+                        </div>
+                    </div>
+                    <div class="wf-card">
+                        <div class="flex justify-between items-center">
+                            <div class="flex gap-16 items-center">
+                                <div class="wf-avatar" style="width:44px;height:44px">SL</div>
+                                <div>
+                                    <div class="wf-card-title">Dr. Sarah Lee · Dermatology</div>
+                                    <div class="wf-card-subtitle">Jun 3, 2026 · 2:30 – 3:00 PM · Follow-up</div>
+                                </div>
+                            </div>
+                            <span class="wf-badge wf-badge-scheduled">Scheduled</span>
+                        </div>
+                        <div class="flex gap-8 mt-16">
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm">Reschedule</button>
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm" style="color:var(--error)">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== INTAKE CHAT ===== -->
+    <section id="pat-intake-chat" class="screen-section">
+        <h2>Intake — Chat Mode</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/intake/:appointmentId</span>
+            <span class="meta-badge role">Patient</span>
+            <span class="meta-badge epic">US-040</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/intake/apt-20260528</span>
+            </div>
+            <div class="wireframe-body">
+                <div class="wf-chat" style="height:560px">
+                    <div class="wf-chat-header">
+                        <div>
+                            <div class="font-semibold" style="font-size:15px">Pre-Visit Intake</div>
+                            <div class="text-xs text-muted">Dr. Patel — Cardiology — May 28, 10:00 AM</div>
+                        </div>
+                        <div class="flex gap-16 items-center">
+                            <div>
+                                <div class="text-xs text-muted mb-8" style="margin-bottom:4px">Step 3 of 5: Medications</div>
+                                <div class="wf-progress" style="width:120px"><div class="wf-progress-fill" style="width:60%"></div></div>
+                            </div>
+                            <div style="display:flex;background:var(--neutral-100);border-radius:6px;overflow:hidden">
+                                <span style="padding:5px 12px;font-size:12px;font-weight:500;background:#fff;box-shadow:var(--shadow-sm)">Chat</span>
+                                <span style="padding:5px 12px;font-size:12px;color:var(--neutral-500)">Form</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wf-chat-messages">
+                        <div class="wf-msg wf-msg-bot">What medications are you currently taking? Please list each one with the dosage if you know it.</div>
+                        <div class="wf-msg wf-msg-user">I take Metformin 500mg twice daily for diabetes</div>
+                        <div class="wf-msg wf-msg-bot">Got it — Metformin 500mg BID. Are you taking any other medications, including over-the-counter or supplements?</div>
+                        <div class="wf-msg wf-msg-user">Also Lisinopril 10mg once daily for blood pressure</div>
+                        <div class="wf-msg wf-msg-bot">Thank you. Any vitamins, supplements, or herbal remedies?</div>
+                    </div>
+                    <div class="wf-chip-row">
+                        <span class="wf-chip">No, that's all</span>
+                        <span class="wf-chip">Yes, Vitamin D</span>
+                        <span class="wf-chip">I'm not sure</span>
+                    </div>
+                    <div class="wf-chat-input">
+                        <input placeholder="Type your response..." disabled>
+                        <button class="wf-send-btn">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== INTAKE FORM ===== -->
+    <section id="pat-intake-form" class="screen-section">
+        <h2>Intake — Form Mode</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/intake/:appointmentId?mode=form</span>
+            <span class="meta-badge role">Patient</span>
+            <span class="meta-badge epic">US-041</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/intake/apt-20260528?mode=form</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <div class="flex justify-between items-center mb-24">
+                    <div>
+                        <h3 style="font-size:18px">Pre-Visit Intake — Form</h3>
+                        <div class="text-sm text-muted">Dr. Patel · May 28, 10:00 AM</div>
+                    </div>
+                    <button class="wf-btn wf-btn-secondary wf-btn-sm">Save Draft</button>
+                </div>
+
+                <div class="wf-stepper" style="max-width:700px">
+                    <div class="wf-step"><div class="wf-step-num done">✓</div><span class="wf-step-label">Complaint</span></div>
+                    <div class="wf-step-line done"></div>
+                    <div class="wf-step"><div class="wf-step-num done">✓</div><span class="wf-step-label">Symptoms</span></div>
+                    <div class="wf-step-line done"></div>
+                    <div class="wf-step"><div class="wf-step-num active">3</div><span class="wf-step-label active">Medications</span></div>
+                    <div class="wf-step-line"></div>
+                    <div class="wf-step"><div class="wf-step-num pending">4</div><span class="wf-step-label">Allergies</span></div>
+                    <div class="wf-step-line"></div>
+                    <div class="wf-step"><div class="wf-step-num pending">5</div><span class="wf-step-label">History</span></div>
+                    <div class="wf-step-line"></div>
+                    <div class="wf-step"><div class="wf-step-num pending">6</div><span class="wf-step-label">Review</span></div>
+                </div>
+
+                <div style="max-width:600px;margin-top:32px">
+                    <h4 class="font-semibold mb-16">Step 3: Current Medications</h4>
+                    <p class="text-sm text-muted mb-16">List any medications you're currently taking:</p>
+
+                    <div class="wf-input-group">
+                        <input class="wf-input" placeholder="🔍 Search medications..." disabled>
+                    </div>
+
+                    <div class="flex flex-col gap-8 mb-24">
+                        <div class="wf-card flex justify-between items-center" style="padding:12px 16px">
+                            <span class="text-sm font-medium">Lisinopril 10mg · Daily</span>
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm" style="color:var(--error)">✕</button>
+                        </div>
+                        <div class="wf-card flex justify-between items-center" style="padding:12px 16px">
+                            <span class="text-sm font-medium">Metformin 500mg · Twice daily</span>
+                            <button class="wf-btn wf-btn-ghost wf-btn-sm" style="color:var(--error)">✕</button>
+                        </div>
+                    </div>
+
+                    <button class="wf-btn wf-btn-ghost wf-btn-sm mb-24">+ Add Custom Medication</button>
+
+                    <div class="flex justify-between">
+                        <button class="wf-btn wf-btn-secondary">← Previous</button>
+                        <button class="wf-btn wf-btn-primary">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DOCUMENTS ===== -->
+    <section id="pat-documents" class="screen-section">
+        <h2>Documents — Upload & List</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/documents</span>
+            <span class="meta-badge role">Patient</span>
+            <span class="meta-badge epic">US-045</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/documents</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <div class="flex justify-between items-center mb-24">
+                    <h3 style="font-size:20px">My Documents</h3>
+                    <button class="wf-btn wf-btn-primary wf-btn-sm">Upload Document</button>
+                </div>
+
+                <!-- Upload Zone -->
+                <div style="border:2px dashed var(--neutral-300);border-radius:12px;padding:40px;text-align:center;margin-bottom:32px;background:var(--neutral-50)">
+                    <div style="font-size:32px;margin-bottom:8px">📄</div>
+                    <div class="font-medium mb-8">Drag files here or <span class="text-primary">click to browse</span></div>
+                    <div class="text-xs text-muted">PDF, PNG, JPG, TIFF — Max 10 MB per file</div>
+                </div>
+
+                <!-- Document Table -->
+                <table class="wf-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Uploaded</th>
+                            <th>Status</th>
+                            <th>Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-medium">lab_results_may.pdf</td>
+                            <td>May 20, 2026</td>
+                            <td><span class="wf-badge wf-badge-progress">● Processed</span></td>
+                            <td>2.1 MB</td>
+                            <td><a href="#pat-docviewer" class="text-primary text-sm font-medium" style="text-decoration:none">View</a> · <span class="text-sm text-muted" style="cursor:pointer">Download</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">referral_letter.pdf</td>
+                            <td>May 18, 2026</td>
+                            <td><span class="wf-badge wf-badge-progress">● Processed</span></td>
+                            <td>890 KB</td>
+                            <td><a href="#" class="text-primary text-sm font-medium" style="text-decoration:none">View</a> · <span class="text-sm text-muted" style="cursor:pointer">Download</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">xray_report.pdf</td>
+                            <td>May 15, 2026</td>
+                            <td><span class="wf-badge wf-badge-noshow">⟳ Processing</span></td>
+                            <td>4.2 MB</td>
+                            <td><span class="text-sm text-muted">Pending...</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">insurance_card.png</td>
+                            <td>May 12, 2026</td>
+                            <td><span class="wf-badge wf-badge-progress">● Processed</span></td>
+                            <td>1.5 MB</td>
+                            <td><a href="#" class="text-primary text-sm font-medium" style="text-decoration:none">View</a> · <span class="text-sm text-muted" style="cursor:pointer">Download</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DOCUMENT VIEWER NER ===== -->
+    <section id="pat-docviewer" class="screen-section">
+        <h2>Document Viewer — NER Highlights</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/documents/:id</span>
+            <span class="meta-badge role">Staff</span>
+            <span class="meta-badge epic">US-047, US-048</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/documents/doc-89</span>
+            </div>
+            <div class="wireframe-body">
+                <!-- Legend -->
+                <div style="padding:12px 24px;border-bottom:1px solid var(--neutral-200);display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+                    <span class="text-xs font-medium text-muted">Entity Legend:</span>
+                    <span class="text-xs"><span class="ner-diagnosis">Diagnosis</span></span>
+                    <span class="text-xs"><span class="ner-medication">Medication</span></span>
+                    <span class="text-xs"><span class="ner-lab">Lab Value</span></span>
+                    <span class="text-xs"><span class="ner-procedure">Procedure</span></span>
+                    <span class="text-xs"><span class="ner-symptom">Symptom</span></span>
+                </div>
+
+                <div class="wf-doc-viewer">
+                    <div class="wf-doc-left">
+                        <div class="text-xs text-muted mb-16">LABORATORY REPORT — May 15, 2026</div>
+                        <p><strong>Patient:</strong> Sarah Chen | DOB: 03/15/1993 | MRN: 54321</p>
+                        <br>
+                        <p><strong>Assessment:</strong></p>
+                        <p>Patient presents with <span class="ner-diagnosis">Type 2 Diabetes Mellitus</span> managed with <span class="ner-medication">Metformin 500mg BID</span>. Also being treated for <span class="ner-diagnosis">Essential Hypertension</span> with <span class="ner-medication">Lisinopril 10mg QD</span>.</p>
+                        <br>
+                        <p><strong>Lab Results:</strong></p>
+                        <p><span class="ner-lab">HbA1c: 7.2%</span> (target &lt;7.0%) — slightly above target</p>
+                        <p><span class="ner-lab">Blood Pressure: 130/85 mmHg</span> — borderline elevated</p>
+                        <p><span class="ner-lab">LDL Cholesterol: 118 mg/dL</span> (target &lt;100)</p>
+                        <p><span class="ner-lab">eGFR: 82 mL/min</span> — normal kidney function</p>
+                        <br>
+                        <p><strong>Allergies:</strong></p>
+                        <p><span class="ner-symptom">Penicillin</span> — severe (anaphylaxis risk)</p>
+                        <p><span class="ner-symptom">Sulfa drugs</span> — mild (rash)</p>
+                        <br>
+                        <p><strong>Plan:</strong></p>
+                        <p>Continue current regimen. Consider adding <span class="ner-medication">Atorvastatin 20mg</span> for <span class="ner-diagnosis">Hyperlipidemia</span>. Recheck <span class="ner-procedure">HbA1c</span> in 3 months.</p>
+                    </div>
+                    <div class="wf-doc-right">
+                        <div class="flex justify-between items-center mb-16">
+                            <h4 class="font-semibold" style="font-size:14px">Extracted Entities</h4>
+                            <span class="text-xs" style="color:var(--success);font-weight:500">Confidence: 94%</span>
+                        </div>
+
+                        <div class="wf-entity-group">
+                            <h5>Diagnoses</h5>
+                            <div class="wf-entity-item"><span class="ner-diagnosis" style="font-size:12px">Type 2 Diabetes (E11.9)</span><span class="wf-confidence">95%</span></div>
+                            <div class="wf-entity-item"><span class="ner-diagnosis" style="font-size:12px">Hypertension (I10)</span><span class="wf-confidence">92%</span></div>
+                            <div class="wf-entity-item"><span class="ner-diagnosis" style="font-size:12px">Hyperlipidemia (E78.5)</span><span class="wf-confidence" style="color:var(--warning)">78%</span></div>
+                        </div>
+
+                        <div class="wf-entity-group">
+                            <h5>Medications</h5>
+                            <div class="wf-entity-item"><span class="ner-medication" style="font-size:12px">Metformin 500mg BID</span><span class="wf-confidence">96%</span></div>
+                            <div class="wf-entity-item"><span class="ner-medication" style="font-size:12px">Lisinopril 10mg QD</span><span class="wf-confidence">94%</span></div>
+                            <div class="wf-entity-item"><span class="ner-medication" style="font-size:12px">Atorvastatin 20mg</span><span class="wf-confidence">89%</span></div>
+                        </div>
+
+                        <div class="wf-entity-group">
+                            <h5>Lab Values</h5>
+                            <div class="wf-entity-item"><span class="ner-lab" style="font-size:12px">HbA1c: 7.2%</span><span class="wf-confidence">99%</span></div>
+                            <div class="wf-entity-item"><span class="ner-lab" style="font-size:12px">BP: 130/85</span><span class="wf-confidence">99%</span></div>
+                            <div class="wf-entity-item"><span class="ner-lab" style="font-size:12px">LDL: 118 mg/dL</span><span class="wf-confidence">97%</span></div>
+                            <div class="wf-entity-item"><span class="ner-lab" style="font-size:12px">eGFR: 82 mL/min</span><span class="wf-confidence">95%</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== STAFF QUEUE ===== -->
+    <section id="staff-queue" class="screen-section">
+        <h2>Staff — Queue Dashboard</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/staff/queue</span>
+            <span class="meta-badge role">Staff</span>
+            <span class="meta-badge epic">US-023, US-024</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/staff/queue</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <div class="flex justify-between items-center mb-16">
+                    <h3 style="font-size:20px">Today's Queue — May 22, 2026</h3>
+                    <button class="wf-btn wf-btn-primary wf-btn-sm">+ Register Walk-in</button>
+                </div>
+
+                <!-- Provider Tabs -->
+                <div class="flex gap-8 mb-16" style="background:var(--neutral-100);padding:4px;border-radius:8px;display:inline-flex">
+                    <span style="padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:#fff;box-shadow:var(--shadow-sm)">Dr. Patel</span>
+                    <span style="padding:6px 14px;border-radius:6px;font-size:13px;color:var(--neutral-500)">Dr. Lee</span>
+                    <span style="padding:6px 14px;border-radius:6px;font-size:13px;color:var(--neutral-500)">Dr. Jones</span>
+                </div>
+
+                <!-- Stats -->
+                <div class="flex gap-24 mb-24 items-center">
+                    <div><span style="font-size:20px;font-weight:700">12</span> <span class="text-sm text-muted">Total</span></div>
+                    <div><span style="font-size:20px;font-weight:700;color:#8B5CF6">3</span> <span class="text-sm text-muted">Arrived</span></div>
+                    <div><span style="font-size:20px;font-weight:700;color:var(--success)">2</span> <span class="text-sm text-muted">In Progress</span></div>
+                    <div><span style="font-size:20px;font-weight:700;color:var(--warning)">1</span> <span class="text-sm text-muted">No-show</span></div>
+                    <div><span style="font-size:20px;font-weight:700;color:var(--info)">6</span> <span class="text-sm text-muted">Remaining</span></div>
+                </div>
+
+                <!-- Queue Table -->
+                <table class="wf-table">
+                    <thead>
+                        <tr><th>Time</th><th>Patient</th><th>Status</th><th>Wait</th><th>Reason</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>9:30 AM</td>
+                            <td class="font-medium">Sarah Chen</td>
+                            <td><span class="wf-badge wf-badge-progress">In Progress</span></td>
+                            <td>—</td>
+                            <td>Checkup</td>
+                            <td><button class="wf-btn wf-btn-sm" style="background:#DCFCE7;color:#166534;border:none;font-size:11px">Complete</button></td>
+                        </tr>
+                        <tr>
+                            <td>10:00 AM</td>
+                            <td class="font-medium">James Okafor</td>
+                            <td><span class="wf-badge wf-badge-arrived">Arrived</span></td>
+                            <td style="color:var(--warning)">12 min</td>
+                            <td>Follow-up</td>
+                            <td><button class="wf-btn wf-btn-sm" style="background:var(--primary-light);color:var(--primary);border:none;font-size:11px">Start</button></td>
+                        </tr>
+                        <tr>
+                            <td>10:30 AM</td>
+                            <td class="font-medium">Lisa Park</td>
+                            <td><span class="wf-badge wf-badge-arrived">Arrived</span></td>
+                            <td style="color:var(--warning)">5 min</td>
+                            <td>Pain mgmt</td>
+                            <td><button class="wf-btn wf-btn-sm" style="background:var(--primary-light);color:var(--primary);border:none;font-size:11px">Start</button></td>
+                        </tr>
+                        <tr style="background:#FEF2F2">
+                            <td>10:00 AM</td>
+                            <td class="font-medium">⚠ Tom Davis</td>
+                            <td><span class="wf-badge wf-badge-arrived">Arrived</span></td>
+                            <td style="color:var(--error);font-weight:500">28 min</td>
+                            <td>Lab review</td>
+                            <td><button class="wf-btn wf-btn-sm" style="background:var(--primary-light);color:var(--primary);border:none;font-size:11px">Start</button></td>
+                        </tr>
+                        <tr>
+                            <td>11:00 AM</td>
+                            <td class="font-medium">Robert Kim</td>
+                            <td><span class="wf-badge wf-badge-scheduled">Scheduled</span></td>
+                            <td>—</td>
+                            <td>Review</td>
+                            <td><button class="wf-btn wf-btn-sm wf-btn-secondary" style="font-size:11px">Mark Arrived</button></td>
+                        </tr>
+                        <tr>
+                            <td>11:30 AM</td>
+                            <td class="font-medium">Maria Lopez</td>
+                            <td><span class="wf-badge wf-badge-scheduled">Scheduled</span></td>
+                            <td>—</td>
+                            <td>Consult</td>
+                            <td><button class="wf-btn wf-btn-sm wf-btn-secondary" style="font-size:11px">Mark Arrived</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== STAFF MEDICAL CODING ===== -->
+    <section id="staff-coding" class="screen-section">
+        <h2>Staff — Medical Coding Review</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/staff/coding/:patientId</span>
+            <span class="meta-badge role">Staff</span>
+            <span class="meta-badge epic">US-055–058</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/staff/coding/patient-54321</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <div class="flex justify-between items-center mb-16">
+                    <h3 style="font-size:20px">Medical Coding — Sarah Chen</h3>
+                    <button class="wf-btn wf-btn-sm" style="background:var(--success);color:#fff;border:none">Submit All Verified</button>
+                </div>
+
+                <div class="wf-card flex gap-24 mb-24 items-center" style="padding:12px 20px">
+                    <span class="text-sm font-medium">6 codes suggested</span>
+                    <span class="text-sm" style="color:var(--success)">3 verified</span>
+                    <span class="text-sm" style="color:var(--error)">1 rejected</span>
+                    <span class="text-sm" style="color:var(--warning)">2 pending</span>
+                </div>
+
+                <div class="flex flex-col gap-12">
+                    <!-- Verified -->
+                    <div class="wf-card flex justify-between items-center">
+                        <div>
+                            <div class="flex gap-8 items-center mb-8">
+                                <code style="padding:2px 8px;background:var(--neutral-100);border-radius:4px;font-size:13px;font-weight:600">E11.9</code>
+                                <span class="font-medium text-sm">Type 2 Diabetes Mellitus</span>
+                            </div>
+                            <div class="flex gap-8 items-center">
+                                <div class="wf-progress" style="width:80px"><div class="wf-progress-fill" style="width:95%;background:var(--success)"></div></div>
+                                <span class="text-xs" style="color:var(--success)">95%</span>
+                            </div>
+                        </div>
+                        <span class="wf-badge wf-badge-progress">✓ Verified</span>
+                    </div>
+
+                    <div class="wf-card flex justify-between items-center">
+                        <div>
+                            <div class="flex gap-8 items-center mb-8">
+                                <code style="padding:2px 8px;background:var(--neutral-100);border-radius:4px;font-size:13px;font-weight:600">I10</code>
+                                <span class="font-medium text-sm">Essential Hypertension</span>
+                            </div>
+                            <div class="flex gap-8 items-center">
+                                <div class="wf-progress" style="width:80px"><div class="wf-progress-fill" style="width:92%;background:var(--success)"></div></div>
+                                <span class="text-xs" style="color:var(--success)">92%</span>
+                            </div>
+                        </div>
+                        <span class="wf-badge wf-badge-progress">✓ Verified</span>
+                    </div>
+
+                    <!-- Pending (low confidence) -->
+                    <div class="wf-card flex justify-between items-center" style="border-color:var(--warning)">
+                        <div>
+                            <div class="flex gap-8 items-center mb-8">
+                                <code style="padding:2px 8px;background:var(--neutral-100);border-radius:4px;font-size:13px;font-weight:600">E78.5</code>
+                                <span class="font-medium text-sm">Hyperlipidemia, unspecified</span>
+                                <span class="text-xs" style="color:var(--warning);font-weight:500">⚠ Requires Review</span>
+                            </div>
+                            <div class="flex gap-8 items-center">
+                                <div class="wf-progress" style="width:80px"><div class="wf-progress-fill" style="width:68%;background:var(--warning)"></div></div>
+                                <span class="text-xs" style="color:var(--warning)">68%</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-8">
+                            <button class="wf-btn wf-btn-sm" style="background:#DCFCE7;color:#166534;border:none">✓</button>
+                            <button class="wf-btn wf-btn-sm" style="background:#FEE2E2;color:#991B1B;border:none">✗</button>
+                            <button class="wf-btn wf-btn-sm wf-btn-secondary">Edit</button>
+                        </div>
+                    </div>
+
+                    <!-- Rejected -->
+                    <div class="wf-card flex justify-between items-center" style="opacity:0.6">
+                        <div>
+                            <div class="flex gap-8 items-center mb-8">
+                                <code style="padding:2px 8px;background:var(--neutral-100);border-radius:4px;font-size:13px;font-weight:600;text-decoration:line-through">Z00.00</code>
+                                <span class="font-medium text-sm" style="text-decoration:line-through">General adult medical exam</span>
+                            </div>
+                            <div class="flex gap-8 items-center">
+                                <div class="wf-progress" style="width:80px"><div class="wf-progress-fill" style="width:65%;background:var(--error)"></div></div>
+                                <span class="text-xs" style="color:var(--error)">65%</span>
+                            </div>
+                        </div>
+                        <span class="wf-badge wf-badge-cancelled">✗ Rejected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ADMIN USERS ===== -->
+    <section id="admin-users" class="screen-section">
+        <h2>Admin — User Management</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/admin/users</span>
+            <span class="meta-badge role">Admin</span>
+            <span class="meta-badge epic">US-059–063</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/admin/users</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <div class="flex justify-between items-center mb-24">
+                    <h3 style="font-size:20px">User Management</h3>
+                    <button class="wf-btn wf-btn-primary wf-btn-sm">+ Create User</button>
+                </div>
+
+                <div class="flex gap-12 mb-24">
+                    <input class="wf-input" placeholder="🔍 Search users..." disabled style="max-width:250px">
+                    <select class="wf-input" style="max-width:140px;color:var(--neutral-500)" disabled><option>Role: All</option></select>
+                    <select class="wf-input" style="max-width:140px;color:var(--neutral-500)" disabled><option>Status: All</option></select>
+                </div>
+
+                <table class="wf-table">
+                    <thead>
+                        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-medium">Dr. Anand Patel</td>
+                            <td>a.patel@health.org</td>
+                            <td><span class="wf-badge" style="background:#DBEAFE;color:#1D4ED8">Staff</span></td>
+                            <td><span class="wf-dot wf-dot-green"></span>Active</td>
+                            <td class="text-muted">2 hours ago</td>
+                            <td><span class="text-primary text-sm font-medium" style="cursor:pointer">Edit</span> · <span class="text-sm" style="color:var(--error);cursor:pointer">Deactivate</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Sarah Chen</td>
+                            <td>s.chen@email.com</td>
+                            <td><span class="wf-badge" style="background:var(--neutral-100);color:var(--neutral-700)">Patient</span></td>
+                            <td><span class="wf-dot wf-dot-green"></span>Active</td>
+                            <td class="text-muted">1 day ago</td>
+                            <td><span class="text-primary text-sm font-medium" style="cursor:pointer">Edit</span> · <span class="text-sm" style="color:var(--error);cursor:pointer">Deactivate</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Rachel Kim</td>
+                            <td>r.kim@health.org</td>
+                            <td><span class="wf-badge" style="background:#EDE9FE;color:#6D28D9">Admin</span></td>
+                            <td><span class="wf-dot wf-dot-green"></span>Active</td>
+                            <td class="text-muted">5 min ago</td>
+                            <td><span class="text-primary text-sm font-medium" style="cursor:pointer">Edit</span></td>
+                        </tr>
+                        <tr style="opacity:0.7">
+                            <td class="font-medium">David Park</td>
+                            <td>d.park@health.org</td>
+                            <td><span class="wf-badge" style="background:#DBEAFE;color:#1D4ED8">Staff</span></td>
+                            <td><span class="wf-dot" style="background:var(--neutral-300)"></span>Inactive</td>
+                            <td class="text-muted">30 days ago</td>
+                            <td><span class="text-sm" style="color:var(--success);cursor:pointer">Activate</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="flex justify-between items-center mt-24">
+                    <span class="text-sm text-muted">Showing 1–4 of 47 users</span>
+                    <div class="flex gap-8 items-center">
+                        <span class="text-sm text-muted">← Prev</span>
+                        <span class="text-sm font-semibold text-primary">1</span>
+                        <span class="text-sm text-muted">2</span>
+                        <span class="text-sm text-muted">3</span>
+                        <span class="text-sm text-primary">Next →</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ADMIN AUDIT ===== -->
+    <section id="admin-audit" class="screen-section">
+        <h2>Admin — Audit Logs</h2>
+        <div class="screen-meta">
+            <span class="meta-badge route">/admin/audit</span>
+            <span class="meta-badge role">Admin</span>
+            <span class="meta-badge epic">US-061, US-062</span>
+        </div>
+
+        <div class="wireframe">
+            <div class="wireframe-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="url">healthplatform.app/admin/audit</span>
+            </div>
+            <div class="wireframe-body" style="padding:32px">
+                <div class="flex justify-between items-center mb-24">
+                    <h3 style="font-size:20px">Audit Logs</h3>
+                    <button class="wf-btn wf-btn-secondary wf-btn-sm">↓ Export CSV</button>
+                </div>
+
+                <div class="flex gap-12 mb-16">
+                    <input class="wf-input" style="max-width:200px;color:var(--neutral-500)" value="May 1 – May 22, 2026" disabled>
+                    <select class="wf-input" style="max-width:130px;color:var(--neutral-500)" disabled><option>Action: All</option></select>
+                    <select class="wf-input" style="max-width:130px;color:var(--neutral-500)" disabled><option>User: All</option></select>
+                    <select class="wf-input" style="max-width:130px;color:var(--neutral-500)" disabled><option>Entity: All</option></select>
+                </div>
+
+                <div class="wf-card mb-16" style="padding:8px 16px;background:#F0FDF4;border-color:#BBF7D0">
+                    <span class="text-xs font-medium" style="color:#166534">✓ Hash chain verified — Integrity intact</span>
+                </div>
+
+                <table class="wf-table">
+                    <thead>
+                        <tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th><th>IP</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-xs">10:32:15</td>
+                            <td>Dr. Patel</td>
+                            <td><code style="padding:2px 6px;background:var(--neutral-100);border-radius:3px;font-size:11px">DataAccess</code></td>
+                            <td>Patient: Sarah Chen</td>
+                            <td class="text-muted text-sm">Viewed 360 record</td>
+                            <td class="text-xs text-muted">192.168.1.45</td>
+                        </tr>
+                        <tr>
+                            <td class="text-xs">10:28:03</td>
+                            <td>Rachel Kim</td>
+                            <td><code style="padding:2px 6px;background:var(--neutral-100);border-radius:3px;font-size:11px">UserAdmin</code></td>
+                            <td>User: David Park</td>
+                            <td class="text-muted text-sm">Deactivated account</td>
+                            <td class="text-xs text-muted">192.168.1.12</td>
+                        </tr>
+                        <tr>
+                            <td class="text-xs">10:15:44</td>
+                            <td>System</td>
+                            <td><code style="padding:2px 6px;background:var(--neutral-100);border-radius:3px;font-size:11px">Processing</code></td>
+                            <td>Document: Labs.pdf</td>
+                            <td class="text-muted text-sm">NER extraction complete</td>
+                            <td class="text-xs text-muted">—</td>
+                        </tr>
+                        <tr>
+                            <td class="text-xs">09:58:21</td>
+                            <td>Sarah Chen</td>
+                            <td><code style="padding:2px 6px;background:var(--neutral-100);border-radius:3px;font-size:11px">DataModify</code></td>
+                            <td>Appointment: APT-001</td>
+                            <td class="text-muted text-sm">Cancelled booking</td>
+                            <td class="text-xs text-muted">73.42.18.201</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="flex justify-between items-center mt-16">
+                    <span class="text-sm text-muted">Showing 1–50 of 12,345 entries</span>
+                    <span class="text-xs text-muted">⚠ This log is read-only. Entries cannot be modified or deleted.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    // Initialize Mermaid
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { primaryColor: '#EEF2FF', primaryBorderColor: '#6366F1', primaryTextColor: '#4338CA' } });
+
+    // Nav active state
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Scroll spy
+    const sections = document.querySelectorAll('.screen-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                const activeLink = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+                if (activeLink) activeLink.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+</script>
+</body>
+</html>
