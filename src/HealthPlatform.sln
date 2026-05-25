@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthPlatform.Domain", "He
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthPlatform.Infrastructure", "HealthPlatform.Infrastructure\HealthPlatform.Infrastructure.csproj", "{75C61A6B-7D26-4E11-B92B-D314FEA50972}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthPlatform.Tests", "HealthPlatform.Tests\HealthPlatform.Tests.csproj", "{4A98A310-FF89-4500-9B39-D9B650100649}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{75C61A6B-7D26-4E11-B92B-D314FEA50972}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75C61A6B-7D26-4E11-B92B-D314FEA50972}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75C61A6B-7D26-4E11-B92B-D314FEA50972}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A98A310-FF89-4500-9B39-D9B650100649}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A98A310-FF89-4500-9B39-D9B650100649}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A98A310-FF89-4500-9B39-D9B650100649}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A98A310-FF89-4500-9B39-D9B650100649}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

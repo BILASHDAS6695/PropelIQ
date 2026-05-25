@@ -1,0 +1,12 @@
+D:\Propel\src\HealthPlatform.Domain\bin\Debug\net8.0\HealthPlatform.Domain.deps.json
+D:\Propel\src\HealthPlatform.Domain\bin\Debug\net8.0\HealthPlatform.Domain.dll
+D:\Propel\src\HealthPlatform.Domain\bin\Debug\net8.0\HealthPlatform.Domain.pdb
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.AssemblyInfoInputs.cache
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.AssemblyInfo.cs
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.csproj.CoreCompileInputs.cache
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.sourcelink.json
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.dll
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\refint\HealthPlatform.Domain.dll
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\HealthPlatform.Domain.pdb
+D:\Propel\src\HealthPlatform.Domain\obj\Debug\net8.0\ref\HealthPlatform.Domain.dll

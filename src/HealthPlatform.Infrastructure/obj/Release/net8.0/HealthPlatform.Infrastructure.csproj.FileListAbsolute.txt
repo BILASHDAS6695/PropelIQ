@@ -16,3 +16,5 @@ D:\Propel\src\HealthPlatform.Infrastructure\obj\Release\net8.0\HealthPlatform.In
 D:\Propel\src\HealthPlatform.Infrastructure\obj\Release\net8.0\refint\HealthPlatform.Infrastructure.dll
 D:\Propel\src\HealthPlatform.Infrastructure\obj\Release\net8.0\HealthPlatform.Infrastructure.pdb
 D:\Propel\src\HealthPlatform.Infrastructure\obj\Release\net8.0\ref\HealthPlatform.Infrastructure.dll
+D:\Propel\src\HealthPlatform.Infrastructure\bin\Release\net8.0\HealthPlatform.Infrastructure.runtimeconfig.json
+D:\Propel\src\HealthPlatform.Infrastructure\obj\Release\net8.0\HealthPlatform.Infrastructure.genruntimeconfig.cache

@@ -5,4 +5,8 @@
     <ProjectReference Include="..\HealthPlatform.Infrastructure\HealthPlatform.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+  </ItemGroup>
+
 </Project>
