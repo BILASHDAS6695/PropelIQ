@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\HealthPlatform.Application\HealthPlatform.Application.csproj" />
+    <ProjectReference Include="..\HealthPlatform.Infrastructure\HealthPlatform.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

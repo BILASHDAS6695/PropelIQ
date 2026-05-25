@@ -1,0 +1,63 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "HealthPlatform.Api/1.0.0": {
+        "dependencies": {
+          "HealthPlatform.Application": "1.0.0",
+          "HealthPlatform.Infrastructure": "1.0.0"
+        },
+        "runtime": {
+          "HealthPlatform.Api.dll": {}
+        }
+      },
+      "HealthPlatform.Application/1.0.0": {
+        "dependencies": {
+          "HealthPlatform.Domain": "1.0.0"
+        },
+        "runtime": {
+          "HealthPlatform.Application.dll": {}
+        }
+      },
+      "HealthPlatform.Domain/1.0.0": {
+        "runtime": {
+          "HealthPlatform.Domain.dll": {}
+        }
+      },
+      "HealthPlatform.Infrastructure/1.0.0": {
+        "dependencies": {
+          "HealthPlatform.Application": "1.0.0"
+        },
+        "runtime": {
+          "HealthPlatform.Infrastructure.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "HealthPlatform.Api/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "HealthPlatform.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "HealthPlatform.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "HealthPlatform.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

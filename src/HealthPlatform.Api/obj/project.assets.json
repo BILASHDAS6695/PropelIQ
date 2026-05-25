@@ -1,0 +1,140 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0": {
+      "HealthPlatform.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "HealthPlatform.Domain": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/HealthPlatform.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/HealthPlatform.Application.dll": {}
+        }
+      },
+      "HealthPlatform.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/HealthPlatform.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/HealthPlatform.Domain.dll": {}
+        }
+      },
+      "HealthPlatform.Infrastructure/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "HealthPlatform.Application": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/HealthPlatform.Infrastructure.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/HealthPlatform.Infrastructure.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "HealthPlatform.Application/1.0.0": {
+      "type": "project",
+      "path": "../HealthPlatform.Application/HealthPlatform.Application.csproj",
+      "msbuildProject": "../HealthPlatform.Application/HealthPlatform.Application.csproj"
+    },
+    "HealthPlatform.Domain/1.0.0": {
+      "type": "project",
+      "path": "../HealthPlatform.Domain/HealthPlatform.Domain.csproj",
+      "msbuildProject": "../HealthPlatform.Domain/HealthPlatform.Domain.csproj"
+    },
+    "HealthPlatform.Infrastructure/1.0.0": {
+      "type": "project",
+      "path": "../HealthPlatform.Infrastructure/HealthPlatform.Infrastructure.csproj",
+      "msbuildProject": "../HealthPlatform.Infrastructure/HealthPlatform.Infrastructure.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "HealthPlatform.Application >= 1.0.0",
+      "HealthPlatform.Infrastructure >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\BilashchandraDas\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\Propel\\src\\HealthPlatform.Api\\HealthPlatform.Api.csproj",
+      "projectName": "HealthPlatform.Api",
+      "projectPath": "D:\\Propel\\src\\HealthPlatform.Api\\HealthPlatform.Api.csproj",
+      "packagesPath": "C:\\Users\\BilashchandraDas\\.nuget\\packages\\",
+      "outputPath": "D:\\Propel\\src\\HealthPlatform.Api\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\BilashchandraDas\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "projectReferences": {
+            "D:\\Propel\\src\\HealthPlatform.Application\\HealthPlatform.Application.csproj": {
+              "projectPath": "D:\\Propel\\src\\HealthPlatform.Application\\HealthPlatform.Application.csproj"
+            },
+            "D:\\Propel\\src\\HealthPlatform.Infrastructure\\HealthPlatform.Infrastructure.csproj": {
+              "projectPath": "D:\\Propel\\src\\HealthPlatform.Infrastructure\\HealthPlatform.Infrastructure.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "allWarningsAsErrors": true,
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      }
+    },
+    "frameworks": {
+      "net8.0": {
+        "targetAlias": "net8.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

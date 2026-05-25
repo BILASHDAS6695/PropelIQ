@@ -1,0 +1,16 @@
+D:\Propel\src\HealthPlatform.Application\bin\Release\net8.0\HealthPlatform.Application.deps.json
+D:\Propel\src\HealthPlatform.Application\bin\Release\net8.0\HealthPlatform.Application.dll
+D:\Propel\src\HealthPlatform.Application\bin\Release\net8.0\HealthPlatform.Application.pdb
+D:\Propel\src\HealthPlatform.Application\bin\Release\net8.0\HealthPlatform.Domain.dll
+D:\Propel\src\HealthPlatform.Application\bin\Release\net8.0\HealthPlatform.Domain.pdb
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.csproj.AssemblyReference.cache
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.AssemblyInfoInputs.cache
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.AssemblyInfo.cs
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.csproj.CoreCompileInputs.cache
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.sourcelink.json
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPl.4A308C14.Up2Date
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.dll
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\refint\HealthPlatform.Application.dll
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\HealthPlatform.Application.pdb
+D:\Propel\src\HealthPlatform.Application\obj\Release\net8.0\ref\HealthPlatform.Application.dll
