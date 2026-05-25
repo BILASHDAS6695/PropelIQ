@@ -22,9 +22,14 @@ D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Microsoft.IdentityModel.Abstra
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Microsoft.OpenApi.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Npgsql.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
+D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\System.Text.Json.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\HealthPlatform.Application.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\HealthPlatform.Domain.dll
 D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\HealthPlatform.Infrastructure.dll
@@ -36,6 +41,7 @@ D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.GeneratedMS
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.AssemblyInfoInputs.cache
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.AssemblyInfo.cs
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.csproj.CoreCompileInputs.cache
+D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.MvcApplicationPartsAssemblyInfo.cs
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.MvcApplicationPartsAssemblyInfo.cache
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.sourcelink.json
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\staticwebassets.build.json
@@ -52,9 +58,3 @@ D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\refint\HealthPlatform.Api.dll
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.pdb
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.genruntimeconfig.cache
 D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\ref\HealthPlatform.Api.dll
-D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Microsoft.OpenApi.dll
-D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
-D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
-D:\Propel\src\HealthPlatform.Api\bin\Debug\net8.0\System.Text.Json.dll
-D:\Propel\src\HealthPlatform.Api\obj\Debug\net8.0\HealthPlatform.Api.MvcApplicationPartsAssemblyInfo.cs
