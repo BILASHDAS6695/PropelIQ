@@ -2,6 +2,7 @@ using HealthPlatform.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace HealthPlatform.Infrastructure;
 
@@ -19,6 +20,17 @@ public static class DependencyInjection
                         typeof(ApplicationDbContext).Assembly.FullName))
                 .UseSnakeCaseNamingConvention());
 
+        var redisConfig = ConfigurationOptions.Parse(
+            configuration["Redis:ConnectionString"] ?? "localhost:6379");
+        redisConfig.Ssl                = bool.Parse(configuration["Redis:Ssl"] ?? "false");
+        redisConfig.ConnectTimeout     = int.Parse(configuration["Redis:ConnectTimeout"] ?? "5000");
+        redisConfig.SyncTimeout        = int.Parse(configuration["Redis:SyncTimeout"] ?? "1000");
+        redisConfig.AbortOnConnectFail = bool.Parse(
+            configuration["Redis:AbortOnConnectFail"] ?? "false");
+
+        services.AddSingleton<IConnectionMultiplexer>(
+            ConnectionMultiplexer.Connect(redisConfig));
+
         services.AddHealthChecks()
             .AddNpgSql(
                 configuration.GetConnectionString("DefaultConnection")!,
@@ -28,7 +40,7 @@ public static class DependencyInjection
                 name: "efcore",
                 tags: ["db", "ready"])
             .AddRedis(
-                configuration.GetConnectionString("Redis") ?? "localhost:6379",
+                configuration["Redis:ConnectionString"] ?? "localhost:6379",
                 name: "redis",
                 tags: ["cache", "ready"]);
 
