@@ -1,3 +1,4 @@
+using HealthPlatform.Api.Logging;
 using HealthPlatform.Application;
 using HealthPlatform.Infrastructure;
 using Serilog;
@@ -16,7 +17,9 @@ try
                      .Enrich.FromLogContext()
                      .Enrich.WithMachineName()
                      .Enrich.WithEnvironmentName()
-                     .Enrich.WithThreadId());
+                     .Enrich.WithThreadId()
+                     .Enrich.With<PhiSanitizingEnricher>()
+                     .Destructure.With<PhiRedactionPolicy>());
 
     // Layer registrations
     builder.Services.AddApplication();

@@ -24,3 +24,6 @@
 
 # CI test result artefacts (generated at runtime, uploaded as GitHub artifacts)
 test-results/
+
+# Serilog rolling log files
+src/HealthPlatform.Api/logs/
