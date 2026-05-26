@@ -1,5 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface User {
   id: string;
@@ -13,6 +16,7 @@ export interface User {
 export class AuthService {
   private readonly currentUser = signal<User | null>(null);
   private readonly token = signal<string | null>(null);
+  private readonly http = inject(HttpClient);
 
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
@@ -51,6 +55,20 @@ export class AuthService {
 
   getToken(): string | null {
     return this.token();
+  }
+
+  register(payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    password: string;
+    confirmPassword: string;
+  }): Observable<{ userId: string }> {
+    return this.http.post<{ userId: string }>(
+      `${environment.apiUrl}/auth/register`,
+      payload,
+    );
   }
 
   private loadFromStorage(): void {

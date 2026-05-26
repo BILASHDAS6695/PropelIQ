@@ -1,7 +1,9 @@
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Infrastructure.Cache;
+using HealthPlatform.Infrastructure.Messaging;
 using HealthPlatform.Infrastructure.Persistence;
 using HealthPlatform.Infrastructure.Persistence.Seed;
+using HealthPlatform.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +39,8 @@ public static class DependencyInjection
         services.AddScoped<ISessionStore, RedisSessionStore>();
         services.AddSingleton<ICacheService, RedisCacheService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<IEmailSender, NoOpEmailSender>();
         services.AddHostedService<AppointmentSlotSeedService>();
 
         services.AddHealthChecks()
