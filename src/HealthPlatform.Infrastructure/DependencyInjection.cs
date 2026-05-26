@@ -1,6 +1,7 @@
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Infrastructure.Cache;
 using HealthPlatform.Infrastructure.Persistence;
+using HealthPlatform.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<ISessionStore, RedisSessionStore>();
         services.AddSingleton<ICacheService, RedisCacheService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddHostedService<AppointmentSlotSeedService>();
 
         services.AddHealthChecks()
             .AddNpgSql(
