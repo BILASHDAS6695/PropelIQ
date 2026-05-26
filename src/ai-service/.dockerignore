@@ -1,0 +1,24 @@
+# ─── Python cache ─────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ─── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ─── Secrets — never bake into image ─────────────────────────────────────────
+.env
+
+# ─── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ─── Test artefacts ───────────────────────────────────────────────────────────
+# Excluded from release image. The development stage gets tests via bind-mount.
+tests/
