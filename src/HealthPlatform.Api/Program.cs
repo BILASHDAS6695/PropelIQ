@@ -108,6 +108,19 @@ try
         };
     });
     builder.Services.AddAuthorization();
+
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? [];
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("Frontend", policy =>
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials());   // required by SignalR negotiate
+    });
     builder.Services.AddSignalR(options =>
     {
         options.EnableDetailedErrors = builder.Environment.IsDevelopment();
@@ -122,6 +135,7 @@ try
     }
 
     app.UseMiddleware<CorrelationIdMiddleware>();
+    app.UseCors("Frontend");
     app.UseExceptionHandler();
     app.UseStatusCodePages();
     app.UseSerilogRequestLogging(options =>
