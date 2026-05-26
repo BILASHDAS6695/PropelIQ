@@ -1,3 +1,5 @@
+using HealthPlatform.Application.Interfaces;
+using HealthPlatform.Infrastructure.Cache;
 using HealthPlatform.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +32,8 @@ public static class DependencyInjection
 
         services.AddSingleton<IConnectionMultiplexer>(
             ConnectionMultiplexer.Connect(redisConfig));
+
+        services.AddScoped<ISessionStore, RedisSessionStore>();
 
         services.AddHealthChecks()
             .AddNpgSql(
