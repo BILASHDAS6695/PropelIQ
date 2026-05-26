@@ -35,6 +35,7 @@ public static class DependencyInjection
 
         services.AddScoped<ISessionStore, RedisSessionStore>();
         services.AddSingleton<ICacheService, RedisCacheService>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddHealthChecks()
             .AddNpgSql(
