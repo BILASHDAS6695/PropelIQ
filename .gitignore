@@ -27,3 +27,10 @@ test-results/
 
 # Serilog rolling log files
 src/HealthPlatform.Api/logs/
+
+# Python bytecode cache
+**/__pycache__/
+**/*.pyc
+
+# PropelIQ runtime telemetry (generated at runtime, not source artifacts)
+.propel/telemetry/
