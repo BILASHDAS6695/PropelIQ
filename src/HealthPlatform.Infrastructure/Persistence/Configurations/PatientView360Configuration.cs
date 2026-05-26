@@ -19,5 +19,8 @@ internal sealed class PatientView360Configuration : IEntityTypeConfiguration<Pat
             .WithOne(p => p.PatientView360)
             .HasForeignKey<PatientView360>(pv => pv.PatientId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // PostgreSQL xmin system column as optimistic-concurrency token (Npgsql 8.x)
+        builder.Property<uint>("xmin").HasColumnType("xid").IsRowVersion();
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using HealthPlatform.Domain.Common;
 using HealthPlatform.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -53,13 +54,44 @@ public sealed class ApplicationDbContext : DbContext
             }
         }
 
+        // Global soft-delete query filter for all ISoftDeletable entities
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                continue;
+
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var isDeletedProperty = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+            var notDeleted = Expression.Not(isDeletedProperty);
+            var lambda = Expression.Lambda(notDeleted, parameter);
+            entityType.SetQueryFilter(lambda);
+        }
+
         base.OnModelCreating(modelBuilder);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        InterceptSoftDeletes();
         UpdateAuditableEntities();
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void InterceptSoftDeletes()
+    {
+        var deletedEntries = ChangeTracker
+            .Entries<ISoftDeletable>()
+            .Where(e => e.State == EntityState.Deleted);
+
+        foreach (var entry in deletedEntries)
+        {
+            entry.State = EntityState.Modified;
+            entry.Entity.IsDeleted = true;
+            entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
+            // DeletedBy is populated by the application layer; left null here
+            // to keep Infrastructure free of HTTP/user-identity concerns.
+            entry.Entity.DeletedBy = null;
+        }
     }
 
     private void UpdateAuditableEntities()

@@ -32,5 +32,8 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
             .WithOne(s => s.Appointment)
             .HasForeignKey<Appointment>(a => a.SlotId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // PostgreSQL xmin system column as optimistic-concurrency token (Npgsql 8.x)
+        builder.Property<uint>("xmin").HasColumnType("xid").IsRowVersion();
     }
 }
