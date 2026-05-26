@@ -1,0 +1,20 @@
+# ─── Build outputs ────────────────────────────────────────────────────────────
+**/bin/
+**/obj/
+
+# ─── IDE / tooling ────────────────────────────────────────────────────────────
+**/.vs/
+**/.vscode/
+**/*.user
+**/.DS_Store
+
+# ─── Test results ─────────────────────────────────────────────────────────────
+**/TestResults/
+
+# ─── Frontend (separate build context) ───────────────────────────────────────
+health-platform-ui/node_modules/
+health-platform-ui/.angular/
+health-platform-ui/dist/
+
+# ─── Python AI service (separate build context in docker-compose.yml) ─────────
+ai-service/

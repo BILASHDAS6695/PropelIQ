@@ -14,3 +14,10 @@
 **/node_modules/
 **/.angular/cache/
 **/dist/
+
+# Environment secrets
+.env
+.env.docker
+
+# Docker build cache (Windows Docker Desktop)
+.docker/
