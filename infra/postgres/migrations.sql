@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
     migration_id character varying(150) NOT NULL,
     product_version character varying(32) NOT NULL,
     CONSTRAINT pk___ef_migrations_history PRIMARY KEY (migration_id)
@@ -558,6 +558,91 @@ BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526105355_AddSoftDelete') THEN
     INSERT INTO "__EFMigrationsHistory" (migration_id, product_version)
     VALUES ('20260526105355_AddSoftDelete', '8.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+
+START TRANSACTION;
+
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    DROP INDEX ix_audit_logs_entity_type_entity_id;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    ALTER TABLE audit_logs ALTER COLUMN user_id DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    ALTER TABLE audit_logs ALTER COLUMN entity_type TYPE character varying(100);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    UPDATE audit_logs SET details = '{}' WHERE details IS NULL;
+    ALTER TABLE audit_logs ALTER COLUMN details SET NOT NULL;
+    ALTER TABLE audit_logs ALTER COLUMN details SET DEFAULT '{}';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    ALTER TABLE audit_logs ALTER COLUMN action TYPE character varying(20);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    CREATE INDEX ix_audit_logs_entity_id ON audit_logs (entity_id);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    CREATE INDEX ix_audit_logs_timestamp ON audit_logs (timestamp);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+
+                    CREATE OR REPLACE RULE audit_logs_no_update AS
+                        ON UPDATE TO audit_logs
+                        DO INSTEAD NOTHING;
+                
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+
+                    CREATE OR REPLACE RULE audit_logs_no_delete AS
+                        ON DELETE TO audit_logs
+                        DO INSTEAD NOTHING;
+                
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260526113434_AddAuditLog') THEN
+    INSERT INTO "__EFMigrationsHistory" (migration_id, product_version)
+    VALUES ('20260526113434_AddAuditLog', '8.0.11');
     END IF;
 END $EF$;
 COMMIT;

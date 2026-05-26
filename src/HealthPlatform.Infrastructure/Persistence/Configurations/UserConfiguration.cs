@@ -25,8 +25,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20);
 
         builder.HasMany(u => u.AuditLogs)
-            .WithOne(al => al.User)
+            .WithOne()
             .HasForeignKey(al => al.UserId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
