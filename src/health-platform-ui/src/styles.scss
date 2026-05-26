@@ -1,0 +1,22 @@
+// PrimeNG
+@import 'primeicons/primeicons.css';
+@import 'primeflex/primeflex.css';
+
+// Custom theme overrides
+:root {
+  --primary-color: #6366f1;
+  --primary-color-text: #ffffff;
+  --surface-ground: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-border: #e2e8f0;
+  --text-color: #0f172a;
+  --text-color-secondary: #64748b;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background: var(--surface-ground);
+  color: var(--text-color);
+}
