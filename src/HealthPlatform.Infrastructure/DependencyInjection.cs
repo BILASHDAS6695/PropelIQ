@@ -12,10 +12,12 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
-                npgsqlOptions => npgsqlOptions.MigrationsAssembly(
-                    typeof(ApplicationDbContext).Assembly.FullName)));
+            options
+                .UseNpgsql(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    npgsqlOptions => npgsqlOptions.MigrationsAssembly(
+                        typeof(ApplicationDbContext).Assembly.FullName))
+                .UseSnakeCaseNamingConvention());
 
         services.AddHealthChecks()
             .AddNpgSql(

@@ -67,7 +67,8 @@ services:
       ASPNETCORE_URLS: http://+:5013
       ConnectionStrings__DefaultConnection: >-
         Host=postgres;Port=5432;Database=${POSTGRES_DB};
-        Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+        Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
+        Maximum Pool Size=100
     volumes:
       - ./src:/app/src:cached
     ports:
