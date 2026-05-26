@@ -1,3 +1,5 @@
+using System.Text.Json;
+using HealthPlatform.Application.Features.Auth;
 using HealthPlatform.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -7,7 +9,7 @@ namespace HealthPlatform.Infrastructure.Cache;
 /// <summary>
 /// Redis-backed implementation of <see cref="ISessionStore"/>.
 /// Key format: session:{userId}
-/// TTL: 15 minutes (sliding — reset on every authenticated request via RefreshTtlAsync).
+/// TTL: 15 minutes (sliding — reset on every authenticated request via RefreshActivityAsync).
 /// </summary>
 internal sealed class RedisSessionStore : ISessionStore
 {
@@ -22,33 +24,51 @@ internal sealed class RedisSessionStore : ISessionStore
         _logger = logger;
     }
 
-    public async Task SetSessionAsync(string userId, string sessionValue,
+    public async Task SetSessionAsync(SessionState session,
                                       CancellationToken ct = default)
     {
-        var key = SessionKey(userId);
-        await _db.StringSetAsync(key, sessionValue, SessionTtl);
-        _logger.LogDebug("Session set for user {UserId}, TTL={Ttl}", userId, SessionTtl);
+        var key = SessionKey(session.UserId);
+        var payload = JsonSerializer.Serialize(session);
+        await _db.StringSetAsync(key, payload, SessionTtl);
+        _logger.LogDebug("Session set for user {UserId}, TTL={Ttl}", session.UserId, SessionTtl);
     }
 
-    public async Task<string?> GetSessionAsync(string userId,
-                                               CancellationToken ct = default)
+    public async Task<SessionState?> GetSessionAsync(Guid userId,
+                                                     CancellationToken ct = default)
     {
         var value = await _db.StringGetAsync(SessionKey(userId));
-        return value.IsNullOrEmpty ? null : value.ToString();
+        if (value.IsNullOrEmpty)
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<SessionState>(value!);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Invalid session payload for user {UserId}", userId);
+            return null;
+        }
     }
 
-    public async Task DeleteSessionAsync(string userId,
+    public async Task DeleteSessionAsync(Guid userId,
                                          CancellationToken ct = default)
     {
         await _db.KeyDeleteAsync(SessionKey(userId));
         _logger.LogDebug("Session deleted for user {UserId}", userId);
     }
 
-    public async Task RefreshTtlAsync(string userId,
-                                      CancellationToken ct = default)
+    public async Task RefreshActivityAsync(Guid userId,
+                                           DateTimeOffset activityAt,
+                                           CancellationToken ct = default)
     {
-        await _db.KeyExpireAsync(SessionKey(userId), SessionTtl);
+        var existing = await GetSessionAsync(userId, ct);
+        if (existing is null)
+            return;
+
+        var updated = existing with { LastActivityTimestamp = activityAt };
+        await SetSessionAsync(updated, ct);
     }
 
-    private static RedisKey SessionKey(string userId) => $"session:{userId}";
+    private static RedisKey SessionKey(Guid userId) => $"session:{userId}";
 }

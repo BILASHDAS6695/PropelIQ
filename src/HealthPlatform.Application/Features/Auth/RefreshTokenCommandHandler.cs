@@ -56,10 +56,17 @@ internal sealed class RefreshTokenCommandHandler
         // ── 3. Generate new session ID + token pair ───────────────────────
         var newSessionId = Guid.NewGuid();
         var tokenPair    = _jwt.GenerateTokenPair(user, newSessionId);
+        var now          = DateTimeOffset.UtcNow;
 
         // ── 4. Update Redis session (resets the 15-min sliding TTL) ───────
         await _session.SetSessionAsync(
-            user.Id.ToString(), newSessionId.ToString(), cancellationToken);
+            new SessionState(
+                user.Id,
+                user.Role.ToString(),
+                user.LastLoginAt ?? now,
+                now,
+                newSessionId),
+            cancellationToken);
 
         // ── 5. Store new refresh token (7-day TTL, old already consumed) ──
         await _jwt.StoreRefreshTokenAsync(

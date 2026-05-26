@@ -69,17 +69,24 @@ internal sealed class LoginCommandHandler
         // ── 4. Generate session + token pair ──────────────────────────────
         var sessionId = Guid.NewGuid();
         var tokenPair = _jwt.GenerateTokenPair(user, sessionId);
+        var now       = DateTimeOffset.UtcNow;
 
         // ── 5. Store Redis session (15-min sliding TTL) ───────────────────
         await _session.SetSessionAsync(
-            user.Id.ToString(), sessionId.ToString(), cancellationToken);
+            new SessionState(
+                user.Id,
+                user.Role.ToString(),
+                now,
+                now,
+                sessionId),
+            cancellationToken);
 
         // ── 6. Store refresh token in Redis (7-day TTL) ───────────────────
         await _jwt.StoreRefreshTokenAsync(
             user.Id, tokenPair.RefreshToken, cancellationToken);
 
         // ── 7. Update LastLoginAt + save ──────────────────────────────────
-        user.LastLoginAt = DateTimeOffset.UtcNow;
+        user.LastLoginAt = now;
         await _uow.SaveChangesAsync(cancellationToken);
 
         // ── 8. Audit: successful login ────────────────────────────────────
