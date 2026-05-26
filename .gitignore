@@ -5,3 +5,12 @@
 /.vs/Propel/FileContentIndex
 /.vs
 /src/.vs/HealthPlatform
+
+# .NET build outputs
+**/bin/
+**/obj/
+
+# Node / Angular
+**/node_modules/
+**/.angular/cache/
+**/dist/
