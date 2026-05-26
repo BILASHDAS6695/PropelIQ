@@ -1,0 +1,159 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+# Cancel any in-progress run for the same ref to save CI minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  dotnet:
+    name: .NET Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/packages.lock.json', '**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore src/HealthPlatform.sln
+
+      - name: Build
+        run: >
+          dotnet build src/HealthPlatform.sln
+          --no-restore
+          --configuration Release
+
+      - name: Test
+        run: >
+          dotnet test src/HealthPlatform.sln
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+          --results-directory ./test-results/dotnet
+
+      - name: Upload .NET test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results
+          path: ./test-results/dotnet/
+          retention-days: 7
+
+  angular:
+    name: Angular Lint, Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: src/health-platform-ui
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cache npm packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('src/health-platform-ui/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+        env:
+          CI: "true"
+
+      - name: Build (production)
+        run: npm run build:prod
+
+      - name: Upload Angular test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: angular-test-results
+          path: ./test-results/angular/
+          retention-days: 7
+
+  python:
+    name: Python Lint, Type-Check & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: src/ai-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('src/ai-service/requirements-ci.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pip install -r requirements-ci.txt
+
+      - name: Lint (ruff)
+        run: ruff check app/ tests/
+
+      - name: Type check (mypy)
+        run: mypy app/ --ignore-missing-imports
+
+      - name: Test (pytest)
+        run: >
+          pytest tests/
+          --tb=short
+          --junitxml=../../test-results/python/junit.xml
+        env:
+          INTERNAL_API_KEY: "ci-test-key"
+
+      - name: Upload Python test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-results
+          path: ./test-results/python/
+          retention-days: 7

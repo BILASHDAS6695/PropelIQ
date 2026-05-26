@@ -1,6 +1,5 @@
 """Smoke test: verify /health returns 200."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app

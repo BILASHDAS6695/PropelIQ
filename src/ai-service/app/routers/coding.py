@@ -1,6 +1,11 @@
 from fastapi import APIRouter
 
-from app.models import CodeSuggestRequest, CodeSuggestResponse, CodeValidateRequest, CodeValidateResponse
+from app.models import (
+    CodeSuggestRequest,
+    CodeSuggestResponse,
+    CodeValidateRequest,
+    CodeValidateResponse,
+)
 
 router = APIRouter()
 

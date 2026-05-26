@@ -21,3 +21,6 @@
 
 # Docker build cache (Windows Docker Desktop)
 .docker/
+
+# CI test result artefacts (generated at runtime, uploaded as GitHub artifacts)
+test-results/
