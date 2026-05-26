@@ -17,12 +17,10 @@ import { AuthService } from '../../../core/auth/auth.service';
 
 // ── Custom cross-field validator ─────────────────────────────────────────────
 function passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
-  const password        = control.get('password');
+  const password = control.get('password');
   const confirmPassword = control.get('confirmPassword');
   if (!password || !confirmPassword) return null;
-  return password.value === confirmPassword.value
-    ? null
-    : { passwordsMismatch: true };
+  return password.value === confirmPassword.value ? null : { passwordsMismatch: true };
 }
 
 @Component({
@@ -46,7 +44,6 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
         }
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-
           <!-- Email -->
           <div class="field">
             <label for="email">Email address</label>
@@ -109,9 +106,7 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
 
           <!-- Phone (optional) -->
           <div class="field">
-            <label for="phone">
-              Phone number <span class="optional">(optional)</span>
-            </label>
+            <label for="phone"> Phone number <span class="optional">(optional)</span> </label>
             <input
               pInputText
               id="phone"
@@ -159,8 +154,11 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
               [feedback]="false"
               [toggleMask]="true"
               styleClass="w-full"
-              [inputStyleClass]="isInvalid('confirmPassword') || form.hasError('passwordsMismatch')
-                                  ? 'ng-invalid w-full' : 'w-full'"
+              [inputStyleClass]="
+                isInvalid('confirmPassword') || form.hasError('passwordsMismatch')
+                  ? 'ng-invalid w-full'
+                  : 'w-full'
+              "
               autocomplete="new-password"
             />
             @if (form.hasError('passwordsMismatch') && form.get('confirmPassword')?.touched) {
@@ -178,92 +176,91 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
           />
         </form>
 
-        <p class="auth-footer">
-          Already have an account? <a routerLink="/login">Sign in</a>
-        </p>
+        <p class="auth-footer">Already have an account? <a routerLink="/login">Sign in</a></p>
       </div>
     </div>
   `,
-  styles: [`
-    .auth-page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--surface-ground);
-      padding: 2rem 1rem;
-    }
-    .auth-card {
-      width: 100%;
-      max-width: 440px;
-      background: var(--surface-card);
-      border: 1px solid var(--surface-border);
-      border-radius: 12px;
-      padding: 2.5rem 2rem;
-    }
-    .auth-title {
-      margin: 0 0 1.5rem;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-color);
-    }
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.375rem;
-      margin-bottom: 1.25rem;
-    }
-    label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-color);
-    }
-    .optional {
-      color: var(--text-color-secondary);
-      font-weight: 400;
-    }
-    .field-error {
-      color: var(--red-500, #ef4444);
-      font-size: 0.75rem;
-    }
-    .auth-footer {
-      margin-top: 1.5rem;
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--text-color-secondary);
-    }
-    .auth-footer a {
-      color: var(--primary-color);
-      text-decoration: none;
-    }
-  `],
+  styles: [
+    `
+      .auth-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-ground);
+        padding: 2rem 1rem;
+      }
+      .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--surface-card);
+        border: 1px solid var(--surface-border);
+        border-radius: 12px;
+        padding: 2.5rem 2rem;
+      }
+      .auth-title {
+        margin: 0 0 1.5rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        margin-bottom: 1.25rem;
+      }
+      label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-color);
+      }
+      .optional {
+        color: var(--text-color-secondary);
+        font-weight: 400;
+      }
+      .field-error {
+        color: var(--red-500, #ef4444);
+        font-size: 0.75rem;
+      }
+      .auth-footer {
+        margin-top: 1.5rem;
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--text-color-secondary);
+      }
+      .auth-footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+    `,
+  ],
 })
 export class RegisterComponent {
-  private readonly fb     = inject(FormBuilder);
-  private readonly auth   = inject(AuthService);
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   // Password complexity: 12+ chars, ≥1 uppercase, ≥1 lowercase, ≥1 digit,
   // ≥1 special character — mirrors server-side NFR-014 rule
-  private readonly passwordPattern =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{12,}$/;
+  private readonly passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{12,}$/;
 
   // Phone: optional; when provided must be E.164-compatible
   private readonly phonePattern = /^\+?[0-9]{7,15}$/;
 
   readonly form: FormGroup = this.fb.group(
     {
-      email:           ['', [Validators.required, Validators.maxLength(256), Validators.email]],
-      firstName:       ['', [Validators.required, Validators.maxLength(100)]],
-      lastName:        ['', [Validators.required, Validators.maxLength(100)]],
-      phone:           ['', [Validators.pattern(this.phonePattern)]],
-      password:        ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
+      email: ['', [Validators.required, Validators.maxLength(256), Validators.email]],
+      firstName: ['', [Validators.required, Validators.maxLength(100)]],
+      lastName: ['', [Validators.required, Validators.maxLength(100)]],
+      phone: ['', [Validators.pattern(this.phonePattern)]],
+      password: ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: passwordsMatchValidator },
   );
 
-  loading     = false;
+  loading = false;
   serverError: string | null = null;
 
   isInvalid(field: string): boolean {
@@ -274,8 +271,8 @@ export class RegisterComponent {
   getError(field: string): string {
     const ctrl = this.form.get(field);
     if (!ctrl?.errors) return '';
-    if (ctrl.errors['required'])  return `${this.fieldLabel(field)} is required.`;
-    if (ctrl.errors['email'])     return 'Email format is invalid.';
+    if (ctrl.errors['required']) return `${this.fieldLabel(field)} is required.`;
+    if (ctrl.errors['email']) return 'Email format is invalid.';
     if (ctrl.errors['maxlength']) return `${this.fieldLabel(field)} is too long.`;
     if (ctrl.errors['pattern']) {
       if (field === 'password')
@@ -283,8 +280,7 @@ export class RegisterComponent {
           'Password must be at least 12 characters and include an uppercase letter, ' +
           'a lowercase letter, a digit, and a special character.'
         );
-      if (field === 'phone')
-        return 'Enter a valid phone number (digits, optional leading +).';
+      if (field === 'phone') return 'Enter a valid phone number (digits, optional leading +).';
     }
     return 'Invalid value.';
   }
@@ -295,7 +291,7 @@ export class RegisterComponent {
       return;
     }
 
-    this.loading     = true;
+    this.loading = true;
     this.serverError = null;
 
     const { email, firstName, lastName, phone, password, confirmPassword } =
@@ -330,14 +326,13 @@ export class RegisterComponent {
 
   private fieldLabel(field: string): string {
     const labels: Record<string, string> = {
-      email:           'Email',
-      firstName:       'First name',
-      lastName:        'Last name',
-      phone:           'Phone number',
-      password:        'Password',
+      email: 'Email',
+      firstName: 'First name',
+      lastName: 'Last name',
+      phone: 'Phone number',
+      password: 'Password',
       confirmPassword: 'Confirm password',
     };
     return labels[field] ?? field;
   }
 }
-

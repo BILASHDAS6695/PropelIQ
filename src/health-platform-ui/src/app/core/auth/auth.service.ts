@@ -31,47 +31,49 @@ export class AuthService {
 
   login(email: string, password: string): Observable<void> {
     return this.http
-      .post<{ accessToken: string; refreshToken: string; expiresIn: number }>(
-        `${environment.apiUrl}/auth/login`,
-        { email, password }
-      )
+      .post<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+      }>(`${environment.apiUrl}/auth/login`, { email, password })
       .pipe(
         map((res) => {
           const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
           const user: User = {
-            id:        payload.sub,
-            email:     payload.email,
+            id: payload.sub,
+            email: payload.email,
             firstName: '',
-            lastName:  '',
-            role:      payload.role?.toLowerCase() as User['role'],
+            lastName: '',
+            role: payload.role?.toLowerCase() as User['role'],
           };
           this.currentUser.set(user);
           this.token.set(res.accessToken);
-          sessionStorage.setItem('auth_token',  res.accessToken);
+          sessionStorage.setItem('auth_token', res.accessToken);
           sessionStorage.setItem('auth_userId', payload.sub);
-          sessionStorage.setItem('auth_user',   JSON.stringify(user));
+          sessionStorage.setItem('auth_user', JSON.stringify(user));
           localStorage.setItem('refresh_token', res.refreshToken);
-        })
+        }),
       );
   }
 
   refresh(): Observable<void> {
-    const userId       = sessionStorage.getItem('auth_userId') ?? '';
+    const userId = sessionStorage.getItem('auth_userId') ?? '';
     const refreshToken = localStorage.getItem('refresh_token') ?? '';
 
     return this.http
-      .post<{ accessToken: string; refreshToken: string; expiresIn: number }>(
-        `${environment.apiUrl}/auth/refresh`,
-        { userId, refreshToken }
-      )
+      .post<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+      }>(`${environment.apiUrl}/auth/refresh`, { userId, refreshToken })
       .pipe(
         map((res) => {
           const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
           this.token.set(res.accessToken);
-          sessionStorage.setItem('auth_token',  res.accessToken);
+          sessionStorage.setItem('auth_token', res.accessToken);
           sessionStorage.setItem('auth_userId', payload.sub);
           localStorage.setItem('refresh_token', res.refreshToken);
-        })
+        }),
       );
   }
 
@@ -95,10 +97,7 @@ export class AuthService {
     password: string;
     confirmPassword: string;
   }): Observable<{ userId: string }> {
-    return this.http.post<{ userId: string }>(
-      `${environment.apiUrl}/auth/register`,
-      payload,
-    );
+    return this.http.post<{ userId: string }>(`${environment.apiUrl}/auth/register`, payload);
   }
 
   private loadFromStorage(): void {
