@@ -8,11 +8,7 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [
-        MessageService,
-        provideRouter([]),
-        provideNoopAnimations(),
-      ],
+      providers: [MessageService, provideRouter([]), provideNoopAnimations()],
     }).compileComponents();
   });
 
