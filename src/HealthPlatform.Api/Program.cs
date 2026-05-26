@@ -43,9 +43,22 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseHttpsRedirection();
+    app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseExceptionHandler();
     app.UseStatusCodePages();
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("CorrelationId",
+                httpContext.Items.TryGetValue("CorrelationId", out var cid) ? cid : null);
+        };
+        options.MessageTemplate =
+            "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    });
+    app.UseHttpsRedirection();
     app.UseAuthorization();
     app.MapControllers();
     app.MapHealthChecks("/health", new HealthCheckOptions
