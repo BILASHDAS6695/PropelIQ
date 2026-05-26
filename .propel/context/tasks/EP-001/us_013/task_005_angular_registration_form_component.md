@@ -1,12 +1,89 @@
+# Task 005: Angular Patient Registration Form Component (Frontend Layer)
+
+## Context
+
+| Field | Value |
+|-------|-------|
+| **User Story** | US-013 |
+| **Epic** | EP-001 |
+| **Layer** | Frontend (Angular) |
+| **Priority** | Critical |
+| **Estimated Effort** | 60 minutes |
+| **Dependencies** | Task 004 (POST /api/auth/register endpoint deployed and reachable) |
+
+## Objective
+
+Replace the `RegisterComponent` stub with a fully functional patient registration
+form using:
+
+- **Angular Reactive Forms** for model-driven validation.
+- **PrimeNG** UI components (`InputText`, `Password`, `Button`, `Message`) —
+  consistent with the existing Aura theme already configured in `app.config.ts`.
+- A `register()` method in `AuthService` that calls `POST /api/auth/register`
+  via `HttpClient`.
+- Client-side validation matching server-side rules (feedback before a round-trip).
+- Success redirect to `/login` with a confirmation query-parameter.
+- Inline `409 Conflict` error rendering without a page reload.
+
+## Acceptance Criteria Covered
+
+- AC-1: Form collects email, firstName, lastName, phone, password, confirmPassword
+- AC-2: Client-side email format validation + server-driven uniqueness error (409)
+- AC-3: Client-side password complexity regex enforced before submit
+- AC-4: Client-side phone format validation (optional field)
+- AC-5 (UI): On success, redirect to `/login?registered=true`
+- AC-6: Duplicate email → inline error message "An account with this email already exists"
+
+## Implementation Steps
+
+### 1. Add `register()` Method to `AuthService`
+
+Extend `src/health-platform-ui/src/app/core/auth/auth.service.ts` with:
+
+```typescript
+import { HttpClient } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+// Add inside the AuthService class:
+
+  private readonly http = inject(HttpClient);
+
+  register(payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    password: string;
+    confirmPassword: string;
+  }): Observable<{ userId: string }> {
+    return this.http.post<{ userId: string }>(
+      `${environment.apiUrl}/api/auth/register`,
+      payload
+    );
+  }
+```
+
+> The `HttpClient` is already provided globally via `provideHttpClient()` in
+> `app.config.ts`.  No additional module import is needed.
+
+### 2. Replace `RegisterComponent`
+
+Replace the entire content of
+`src/health-platform-ui/src/app/features/auth/register/register.component.ts`
+with:
+
+```typescript
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
-  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  ValidationErrors,
   Validators,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
@@ -41,6 +118,7 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
       <div class="auth-card">
         <h1 class="auth-title">Create Account</h1>
 
+        <!-- Server-level error (409 duplicate email) -->
         @if (serverError) {
           <p-message severity="error" [text]="serverError" styleClass="w-full mb-4" />
         }
@@ -109,9 +187,7 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
 
           <!-- Phone (optional) -->
           <div class="field">
-            <label for="phone">
-              Phone number <span class="optional">(optional)</span>
-            </label>
+            <label for="phone">Phone number <span class="optional">(optional)</span></label>
             <input
               pInputText
               id="phone"
@@ -239,12 +315,12 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
   `],
 })
 export class RegisterComponent {
-  private readonly fb     = inject(FormBuilder);
-  private readonly auth   = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly fb      = inject(FormBuilder);
+  private readonly auth    = inject(AuthService);
+  private readonly router  = inject(Router);
 
   // Password complexity: 12+ chars, ≥1 uppercase, ≥1 lowercase, ≥1 digit,
-  // ≥1 special character — mirrors server-side NFR-014 rule
+  // ≥1 special character (mirrors server-side NFR-014 rule)
   private readonly passwordPattern =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{12,}$/;
 
@@ -260,10 +336,10 @@ export class RegisterComponent {
       password:        ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
       confirmPassword: ['', [Validators.required]],
     },
-    { validators: passwordsMatchValidator },
+    { validators: passwordsMatchValidator }
   );
 
-  loading     = false;
+  loading    = false;
   serverError: string | null = null;
 
   isInvalid(field: string): boolean {
@@ -274,15 +350,13 @@ export class RegisterComponent {
   getError(field: string): string {
     const ctrl = this.form.get(field);
     if (!ctrl?.errors) return '';
-    if (ctrl.errors['required'])  return `${this.fieldLabel(field)} is required.`;
-    if (ctrl.errors['email'])     return 'Email format is invalid.';
-    if (ctrl.errors['maxlength']) return `${this.fieldLabel(field)} is too long.`;
+    if (ctrl.errors['required'])    return `${this.fieldLabel(field)} is required.`;
+    if (ctrl.errors['email'])       return 'Email format is invalid.';
+    if (ctrl.errors['maxlength'])   return `${this.fieldLabel(field)} is too long.`;
     if (ctrl.errors['pattern']) {
       if (field === 'password')
-        return (
-          'Password must be at least 12 characters and include an uppercase letter, ' +
-          'a lowercase letter, a digit, and a special character.'
-        );
+        return 'Password must be at least 12 characters and include an uppercase letter, ' +
+               'a lowercase letter, a digit, and a special character.';
       if (field === 'phone')
         return 'Enter a valid phone number (digits, optional leading +).';
     }
@@ -319,8 +393,7 @@ export class RegisterComponent {
           this.loading = false;
           if (err.status === 409) {
             this.serverError =
-              (err.error as { detail?: string })?.detail ??
-              'An account with this email already exists.';
+              err.error?.detail ?? 'An account with this email already exists.';
           } else {
             this.serverError = 'Registration failed. Please try again later.';
           }
@@ -340,4 +413,49 @@ export class RegisterComponent {
     return labels[field] ?? field;
   }
 }
+```
 
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/health-platform-ui/src/app/core/auth/auth.service.ts` | Add `register()` method with `HttpClient` POST |
+| `src/health-platform-ui/src/app/features/auth/register/register.component.ts` | Replace stub with full reactive form |
+
+## Verification
+
+```bash
+cd src/health-platform-ui
+npm install
+npm start
+```
+
+Navigate to `http://localhost:4200/register` and verify:
+
+1. **Happy path** — fill all fields with valid data → form submits → redirected
+   to `/login?registered=true`.
+2. **Duplicate email** — register with the same email a second time → inline
+   error "An account with this email already exists." appears without reload.
+3. **Weak password** — enter `"password123"` → "Password must be at least 12
+   characters..." shown without submitting.
+4. **Passwords mismatch** — enter different values → "Passwords do not match."
+   shown on `confirmPassword` field when touched.
+5. **Empty submit** — click "Create account" without filling fields → all
+   required errors appear simultaneously.
+6. **Tab accessibility** — navigate the entire form using the keyboard only;
+   confirm focus order is logical and error messages are announced (check via
+   `aria-describedby` linkage on the email field).
+
+## Notes
+
+- PrimeNG `p-password` exposes a strength meter (`[feedback]="true"`) for the
+  main password field to give visual guidance to the user.
+- The `loading` flag disables the submit button and shows a spinner during the
+  HTTP call, preventing double-submit.
+- The `/login?registered=true` query parameter can be consumed by
+  `LoginComponent` to display a "Account created! Please sign in." banner (out
+  of scope for this story but the hook is in place).
+- `phone` is optional in the form; a `null` value is passed to the API when
+  empty, matching the nullable `Phone?` field on `RegisterPatientCommand`.
+- `[class.ng-invalid]` on `pInputText` elements triggers PrimeNG's built-in
+  invalid styling (red border) without adding extra CSS.
