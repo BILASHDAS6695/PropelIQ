@@ -17,6 +17,19 @@ public static class DependencyInjection
                 npgsqlOptions => npgsqlOptions.MigrationsAssembly(
                     typeof(ApplicationDbContext).Assembly.FullName)));
 
+        services.AddHealthChecks()
+            .AddNpgSql(
+                configuration.GetConnectionString("DefaultConnection")!,
+                name: "postgres",
+                tags: ["db", "ready"])
+            .AddDbContextCheck<ApplicationDbContext>(
+                name: "efcore",
+                tags: ["db", "ready"])
+            .AddRedis(
+                configuration.GetConnectionString("Redis") ?? "localhost:6379",
+                name: "redis",
+                tags: ["cache", "ready"]);
+
         return services;
     }
 }

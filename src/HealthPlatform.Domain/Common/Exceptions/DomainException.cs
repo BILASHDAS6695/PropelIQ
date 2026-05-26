@@ -1,0 +1,8 @@
+namespace HealthPlatform.Domain.Common.Exceptions;
+
+/// <summary>Base type for all domain-layer exceptions.</summary>
+public abstract class DomainException : Exception
+{
+    protected DomainException(string message) : base(message) { }
+    protected DomainException(string message, Exception inner) : base(message, inner) { }
+}
