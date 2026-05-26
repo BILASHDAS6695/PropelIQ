@@ -1,10 +1,15 @@
 using HealthChecks.UI.Client;
+using HealthPlatform.Api.Hubs;
 using HealthPlatform.Api.Logging;
 using HealthPlatform.Api.Middleware;
 using HealthPlatform.Application;
 using HealthPlatform.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Serilog;
+using System.Text;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -31,19 +36,106 @@ try
     // API services
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title       = "HealthPlatform API",
+            Version     = "v1",
+            Description = "RESTful API for the HealthPlatform scheduling and queue management system."
+        });
+
+        // Include XML doc comments in the spec
+        var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+            options.IncludeXmlComments(xmlPath);
+
+        // JWT Bearer security definition
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name         = "Authorization",
+            Description  = "Enter: Bearer {your JWT token}",
+            In           = ParameterLocation.Header,
+            Type         = SecuritySchemeType.Http,
+            Scheme       = "bearer",
+            BearerFormat = "JWT"
+        });
+
+        options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+        {
+            { new OpenApiSecuritySchemeReference("Bearer", doc), [] }
+        });
+    });
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
+
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = jwtSettings["Issuer"],
+            ValidAudience            = jwtSettings["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!))
+        };
+
+        // Support SignalR: extract token from query string when WebSocket
+        // or Server-Sent Events transport is used (browser cannot set headers).
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
+    builder.Services.AddAuthorization();
+
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? [];
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("Frontend", policy =>
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials());   // required by SignalR negotiate
+    });
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    });
 
     var app = builder.Build();
 
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI(ui => ui.SwaggerEndpoint("/swagger/v1/swagger.json", "HealthPlatform API v1"));
     }
 
     app.UseMiddleware<CorrelationIdMiddleware>();
+    app.UseCors("Frontend");
     app.UseExceptionHandler();
     app.UseStatusCodePages();
     app.UseSerilogRequestLogging(options =>
@@ -59,8 +151,10 @@ try
             "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
     });
     app.UseHttpsRedirection();
+    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHub<NotificationHub>("/hubs/notifications");
     app.MapHealthChecks("/health", new HealthCheckOptions
     {
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
