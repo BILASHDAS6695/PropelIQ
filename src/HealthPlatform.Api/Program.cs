@@ -1,4 +1,5 @@
 using HealthChecks.UI.Client;
+using HealthPlatform.Api.Hubs;
 using HealthPlatform.Api.Logging;
 using HealthPlatform.Api.Middleware;
 using HealthPlatform.Application;
@@ -107,6 +108,10 @@ try
         };
     });
     builder.Services.AddAuthorization();
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    });
 
     var app = builder.Build();
 
@@ -135,6 +140,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHub<NotificationHub>("/hubs/notifications");
     app.MapHealthChecks("/health", new HealthCheckOptions
     {
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
