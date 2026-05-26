@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -10,6 +11,12 @@ export interface User {
   firstName: string;
   lastName: string;
   role: 'patient' | 'staff' | 'admin';
+}
+
+interface JwtPayload {
+  sub: string;
+  email?: string;
+  role?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -28,21 +35,52 @@ export class AuthService {
     this.loadFromStorage();
   }
 
-  login(email: string, _password: string): void {
-    // TODO: Replace with real API call — _password will be sent to backend
-    const mockUser: User = {
-      id: '1',
-      email,
-      firstName: 'Sarah',
-      lastName: 'Chen',
-      role: 'patient',
-    };
-    const mockToken = 'stub-jwt-token';
+  login(email: string, password: string): Observable<void> {
+    return this.http
+      .post<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+      }>(`${environment.apiUrl}/auth/login`, { email, password })
+      .pipe(
+        map((res) => {
+          const payload = this.decodeJwtPayload(res.accessToken);
+          const user: User = {
+            id: payload.sub,
+            email: payload.email ?? '',
+            firstName: '',
+            lastName: '',
+            role: payload.role?.toLowerCase() as User['role'],
+          };
+          this.currentUser.set(user);
+          this.token.set(res.accessToken);
+          sessionStorage.setItem('auth_token', res.accessToken);
+          sessionStorage.setItem('auth_userId', payload.sub);
+          sessionStorage.setItem('auth_user', JSON.stringify(user));
+          localStorage.setItem('refresh_token', res.refreshToken);
+        }),
+      );
+  }
 
-    this.currentUser.set(mockUser);
-    this.token.set(mockToken);
-    sessionStorage.setItem('auth_token', mockToken);
-    sessionStorage.setItem('auth_user', JSON.stringify(mockUser));
+  refresh(): Observable<void> {
+    const userId = sessionStorage.getItem('auth_userId') ?? '';
+    const refreshToken = localStorage.getItem('refresh_token') ?? '';
+
+    return this.http
+      .post<{
+        accessToken: string;
+        refreshToken: string;
+        expiresIn: number;
+      }>(`${environment.apiUrl}/auth/refresh`, { userId, refreshToken })
+      .pipe(
+        map((res) => {
+          const payload = this.decodeJwtPayload(res.accessToken);
+          this.token.set(res.accessToken);
+          sessionStorage.setItem('auth_token', res.accessToken);
+          sessionStorage.setItem('auth_userId', payload.sub);
+          localStorage.setItem('refresh_token', res.refreshToken);
+        }),
+      );
   }
 
   logout(): void {
@@ -65,10 +103,7 @@ export class AuthService {
     password: string;
     confirmPassword: string;
   }): Observable<{ userId: string }> {
-    return this.http.post<{ userId: string }>(
-      `${environment.apiUrl}/auth/register`,
-      payload,
-    );
+    return this.http.post<{ userId: string }>(`${environment.apiUrl}/auth/register`, payload);
   }
 
   private loadFromStorage(): void {
@@ -78,5 +113,16 @@ export class AuthService {
       this.token.set(token);
       this.currentUser.set(JSON.parse(userJson) as User);
     }
+  }
+
+  private decodeJwtPayload(token: string): JwtPayload {
+    const payloadPart = token.split('.')[1];
+    if (!payloadPart) {
+      throw new Error('Invalid JWT token payload');
+    }
+
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    return JSON.parse(atob(paddedBase64)) as JwtPayload;
   }
 }
