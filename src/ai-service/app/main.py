@@ -8,12 +8,13 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.logging_config import configure_logging
 from app.middleware.api_key_auth import ApiKeyMiddleware
-from app.routers import extraction, coding, intake
+from app.routers import coding, extraction, intake
 
 # Configure structured logging as early as possible
 configure_logging(settings.log_level)
 
 import structlog  # noqa: E402 — must import after configure_logging()
+
 logger = structlog.get_logger(__name__)
 
 app = FastAPI(

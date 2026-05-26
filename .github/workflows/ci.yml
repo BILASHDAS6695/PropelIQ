@@ -93,7 +93,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test -- --run --reporter=junit --outputFile=../../test-results/angular/junit.xml
+        run: npm test
         env:
           CI: "true"
 

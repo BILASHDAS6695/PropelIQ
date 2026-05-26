@@ -1,6 +1,11 @@
 from fastapi import APIRouter
 
-from app.models import IntakeParseRequest, IntakeParseResponse, IntakeClassifyRequest, IntakeClassifyResponse
+from app.models import (
+    IntakeClassifyRequest,
+    IntakeClassifyResponse,
+    IntakeParseRequest,
+    IntakeParseResponse,
+)
 
 router = APIRouter()
 

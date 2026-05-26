@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.models import OcrRequest, OcrResponse, NerRequest, NerResponse
+from app.models import NerRequest, NerResponse, OcrRequest, OcrResponse
 
 router = APIRouter()
 
