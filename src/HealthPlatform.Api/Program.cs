@@ -4,6 +4,7 @@ using HealthPlatform.Api.Middleware;
 using HealthPlatform.Application;
 using HealthPlatform.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.OpenApi;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -31,7 +32,37 @@ try
     // API services
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title       = "HealthPlatform API",
+            Version     = "v1",
+            Description = "RESTful API for the HealthPlatform scheduling and queue management system."
+        });
+
+        // Include XML doc comments in the spec
+        var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+            options.IncludeXmlComments(xmlPath);
+
+        // JWT Bearer security definition
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name         = "Authorization",
+            Description  = "Enter: Bearer {your JWT token}",
+            In           = ParameterLocation.Header,
+            Type         = SecuritySchemeType.Http,
+            Scheme       = "bearer",
+            BearerFormat = "JWT"
+        });
+
+        options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+        {
+            { new OpenApiSecuritySchemeReference("Bearer", doc), [] }
+        });
+    });
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
@@ -40,7 +71,7 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI(ui => ui.SwaggerEndpoint("/swagger/v1/swagger.json", "HealthPlatform API v1"));
     }
 
     app.UseMiddleware<CorrelationIdMiddleware>();
