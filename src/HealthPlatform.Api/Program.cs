@@ -1,6 +1,8 @@
+using HealthChecks.UI.Client;
 using HealthPlatform.Api.Logging;
 using HealthPlatform.Application;
 using HealthPlatform.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -41,6 +43,10 @@ try
     app.UseHttpsRedirection();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHealthChecks("/health", new HealthCheckOptions
+    {
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    });
 
     app.Run();
 }
