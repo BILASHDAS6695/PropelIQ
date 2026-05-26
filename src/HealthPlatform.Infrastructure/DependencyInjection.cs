@@ -34,6 +34,7 @@ public static class DependencyInjection
             ConnectionMultiplexer.Connect(redisConfig));
 
         services.AddScoped<ISessionStore, RedisSessionStore>();
+        services.AddSingleton<ICacheService, RedisCacheService>();
 
         services.AddHealthChecks()
             .AddNpgSql(
