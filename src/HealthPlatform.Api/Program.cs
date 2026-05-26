@@ -1,5 +1,6 @@
 using HealthChecks.UI.Client;
 using HealthPlatform.Api.Logging;
+using HealthPlatform.Api.Middleware;
 using HealthPlatform.Application;
 using HealthPlatform.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -31,6 +32,8 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    builder.Services.AddProblemDetails();
 
     var app = builder.Build();
 
@@ -41,6 +44,8 @@ try
     }
 
     app.UseHttpsRedirection();
+    app.UseExceptionHandler();
+    app.UseStatusCodePages();
     app.UseAuthorization();
     app.MapControllers();
     app.MapHealthChecks("/health", new HealthCheckOptions
