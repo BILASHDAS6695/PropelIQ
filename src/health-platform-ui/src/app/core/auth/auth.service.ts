@@ -13,6 +13,12 @@ export interface User {
   role: 'patient' | 'staff' | 'admin';
 }
 
+interface JwtPayload {
+  sub: string;
+  email?: string;
+  role?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly currentUser = signal<User | null>(null);
@@ -38,10 +44,10 @@ export class AuthService {
       }>(`${environment.apiUrl}/auth/login`, { email, password })
       .pipe(
         map((res) => {
-          const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
+          const payload = this.decodeJwtPayload(res.accessToken);
           const user: User = {
             id: payload.sub,
-            email: payload.email,
+            email: payload.email ?? '',
             firstName: '',
             lastName: '',
             role: payload.role?.toLowerCase() as User['role'],
@@ -68,7 +74,7 @@ export class AuthService {
       }>(`${environment.apiUrl}/auth/refresh`, { userId, refreshToken })
       .pipe(
         map((res) => {
-          const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
+          const payload = this.decodeJwtPayload(res.accessToken);
           this.token.set(res.accessToken);
           sessionStorage.setItem('auth_token', res.accessToken);
           sessionStorage.setItem('auth_userId', payload.sub);
@@ -107,5 +113,16 @@ export class AuthService {
       this.token.set(token);
       this.currentUser.set(JSON.parse(userJson) as User);
     }
+  }
+
+  private decodeJwtPayload(token: string): JwtPayload {
+    const payloadPart = token.split('.')[1];
+    if (!payloadPart) {
+      throw new Error('Invalid JWT token payload');
+    }
+
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    return JSON.parse(atob(paddedBase64)) as JwtPayload;
   }
 }
