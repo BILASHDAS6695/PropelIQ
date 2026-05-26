@@ -147,6 +147,8 @@ jobs:
           pytest tests/
           --tb=short
           --junitxml=../../test-results/python/junit.xml
+        env:
+          INTERNAL_API_KEY: "ci-test-key"
 
       - name: Upload Python test results
         if: always()
