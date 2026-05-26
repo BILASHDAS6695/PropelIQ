@@ -28,18 +28,18 @@ import { AuthService } from '../../../core/auth/auth.service';
       >
         <h1 class="text-center text-2xl font-semibold mb-4">Sign In</h1>
 
-        @if (registered) {
+        <div *ngIf="registered">
           <p-message
             severity="success"
             text="Account created — please sign in."
             styleClass="mb-3 w-full"
           >
           </p-message>
-        }
+        </div>
 
-        @if (serverError) {
+        <div *ngIf="serverError">
           <p-message severity="error" [text]="serverError" styleClass="mb-3 w-full"> </p-message>
-        }
+        </div>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="field mb-3">
@@ -53,9 +53,9 @@ import { AuthService } from '../../../core/auth/auth.service';
               [class.ng-invalid]="isInvalid('email')"
               autocomplete="username"
             />
-            @if (isInvalid('email')) {
+            <div *ngIf="isInvalid('email')">
               <small class="p-error"> Enter a valid email address. </small>
-            }
+            </div>
           </div>
 
           <div class="field mb-4">
@@ -71,9 +71,9 @@ import { AuthService } from '../../../core/auth/auth.service';
               autocomplete="current-password"
             >
             </p-password>
-            @if (isInvalid('password')) {
+            <div *ngIf="isInvalid('password')">
               <small class="p-error"> Password is required. </small>
-            }
+            </div>
           </div>
 
           <p-button
