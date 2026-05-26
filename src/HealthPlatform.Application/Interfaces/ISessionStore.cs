@@ -1,26 +1,28 @@
 namespace HealthPlatform.Application.Interfaces;
 
+using HealthPlatform.Application.Features.Auth;
+
 /// <summary>
 /// Manages user session tokens in the distributed cache.
 /// Sessions expire after 15 minutes of inactivity (sliding expiration).
 /// </summary>
 public interface ISessionStore
 {
-    /// <summary>Stores a session value for the given user. Overwrites if exists.</summary>
-    Task SetSessionAsync(string userId, string sessionValue, CancellationToken ct = default);
+    /// <summary>Stores a structured session payload. Overwrites if exists.</summary>
+    Task SetSessionAsync(SessionState session, CancellationToken ct = default);
 
     /// <summary>
-    /// Retrieves the session value for the given user.
+    /// Retrieves the session payload for the given user.
     /// Returns <c>null</c> if the session has expired or does not exist.
     /// </summary>
-    Task<string?> GetSessionAsync(string userId, CancellationToken ct = default);
+    Task<SessionState?> GetSessionAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>Removes the session for the given user (logout / invalidation).</summary>
-    Task DeleteSessionAsync(string userId, CancellationToken ct = default);
+    Task DeleteSessionAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>
-    /// Resets the TTL to 15 minutes (sliding window). Call on every authenticated
-    /// request to keep the session alive during active use.
+    /// Updates last activity and resets the TTL to 15 minutes (sliding window).
+    /// Call on every authenticated request to keep the session alive during active use.
     /// </summary>
-    Task RefreshTtlAsync(string userId, CancellationToken ct = default);
+    Task RefreshActivityAsync(Guid userId, DateTimeOffset activityAt, CancellationToken ct = default);
 }

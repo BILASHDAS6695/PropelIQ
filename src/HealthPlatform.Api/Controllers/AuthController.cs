@@ -2,13 +2,13 @@ using HealthPlatform.Application.Features.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace HealthPlatform.Api.Controllers;
 
 /// <summary>Authentication and account management endpoints.</summary>
 [ApiController]
 [Route("api/auth")]
-[AllowAnonymous]
 public sealed class AuthController : ControllerBase
 {
     private readonly ISender _sender;
@@ -26,6 +26,7 @@ public sealed class AuthController : ControllerBase
     /// 422 Unprocessable Entity — one or more field validations failed.
     /// </returns>
     [HttpPost("register")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(RegisterResponse),          StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails),            StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ValidationProblemDetails),  StatusCodes.Status422UnprocessableEntity)]
@@ -66,6 +67,7 @@ public sealed class AuthController : ControllerBase
     /// 422 Unprocessable Entity — input validation failed.
     /// </returns>
     [HttpPost("login")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(AuthTokenResponse),        StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status422UnprocessableEntity)]
@@ -100,6 +102,7 @@ public sealed class AuthController : ControllerBase
     /// 401 Unauthorized — refresh token invalid or expired.
     /// </returns>
     [HttpPost("refresh")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(AuthTokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails),    StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh(
@@ -123,6 +126,36 @@ public sealed class AuthController : ControllerBase
             result.AccessToken!,
             result.RefreshToken!,
             result.ExpiresIn));
+    }
+
+    /// <summary>
+    /// Revokes the current user's session and refresh token.
+    /// </summary>
+    /// <returns>
+    /// 204 No Content — logout succeeded.<br/>
+    /// 401 Unauthorized — user claim missing/invalid.
+    /// </returns>
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(CancellationToken ct)
+    {
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(sub, out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Invalid user context."
+            });
+        }
+
+        await _sender.Send(new LogoutCommand(userId), ct);
+        return NoContent();
     }
 }
 

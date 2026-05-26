@@ -152,6 +152,7 @@ try
     });
     app.UseHttpsRedirection();
     app.UseAuthentication();
+    app.UseMiddleware<SessionValidationMiddleware>();
     app.UseAuthorization();
     app.MapControllers();
     app.MapHub<NotificationHub>("/hubs/notifications");

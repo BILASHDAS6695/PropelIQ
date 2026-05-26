@@ -1,8 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -84,11 +84,25 @@ export class AuthService {
   }
 
   logout(): void {
+    this.http
+      .post<void>(`${environment.apiUrl}/auth/logout`, {})
+      .pipe(
+        catchError(() => of(void 0)),
+        finalize(() => {
+          this.clearAuthState();
+          this.router.navigate(['/login']);
+        }),
+      )
+      .subscribe();
+  }
+
+  clearAuthState(): void {
     this.currentUser.set(null);
     this.token.set(null);
     sessionStorage.removeItem('auth_token');
     sessionStorage.removeItem('auth_user');
-    this.router.navigate(['/login']);
+    sessionStorage.removeItem('auth_userId');
+    localStorage.removeItem('refresh_token');
   }
 
   getToken(): string | null {

@@ -37,6 +37,15 @@ import { AuthService } from '../../../core/auth/auth.service';
           </p-message>
         </div>
 
+        <div *ngIf="sessionExpired">
+          <p-message
+            severity="warn"
+            text="Session expired. Please sign in again."
+            styleClass="mb-3 w-full"
+          >
+          </p-message>
+        </div>
+
         <div *ngIf="serverError">
           <p-message severity="error" [text]="serverError" styleClass="mb-3 w-full"> </p-message>
         </div>
@@ -108,9 +117,11 @@ export class LoginComponent implements OnInit {
   loading = false;
   serverError = '';
   registered = false;
+  sessionExpired = false;
 
   ngOnInit(): void {
     this.registered = this.route.snapshot.queryParamMap.get('registered') === 'true';
+    this.sessionExpired = this.route.snapshot.queryParamMap.get('expired') === 'true';
   }
 
   isInvalid(field: string): boolean {
