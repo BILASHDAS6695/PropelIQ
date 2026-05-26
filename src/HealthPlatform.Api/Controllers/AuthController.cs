@@ -56,6 +56,74 @@ public sealed class AuthController : ControllerBase
         var response = new RegisterResponse(result.UserId!.Value);
         return CreatedAtAction(nameof(Register), response);
     }
+
+    /// <summary>
+    /// Authenticates a user and issues a JWT access token + refresh token.
+    /// </summary>
+    /// <returns>
+    /// 200 OK — token pair with expiresIn.<br/>
+    /// 401 Unauthorized — invalid credentials, inactive, or locked account.<br/>
+    /// 422 Unprocessable Entity — input validation failed.
+    /// </returns>
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(AuthTokenResponse),        StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest request,
+        CancellationToken ct)
+    {
+        var result = await _sender.Send(
+            new LoginCommand(request.Email, request.Password), ct);
+
+        if (!result.IsSuccess)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title  = "Authentication failed.",
+                Detail = result.Error
+            });
+        }
+
+        return Ok(new AuthTokenResponse(
+            result.AccessToken!,
+            result.RefreshToken!,
+            result.ExpiresIn));
+    }
+
+    /// <summary>
+    /// Issues a new token pair from a valid refresh token (single-use rotation).
+    /// </summary>
+    /// <returns>
+    /// 200 OK — new token pair.<br/>
+    /// 401 Unauthorized — refresh token invalid or expired.
+    /// </returns>
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(AuthTokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),    StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh(
+        [FromBody] RefreshRequest request,
+        CancellationToken ct)
+    {
+        var result = await _sender.Send(
+            new RefreshTokenCommand(request.UserId, request.RefreshToken), ct);
+
+        if (!result.IsSuccess)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title  = "Token refresh failed.",
+                Detail = result.Error
+            });
+        }
+
+        return Ok(new AuthTokenResponse(
+            result.AccessToken!,
+            result.RefreshToken!,
+            result.ExpiresIn));
+    }
 }
 
 // ── Request / Response DTOs ──────────────────────────────────────────────────
@@ -72,3 +140,15 @@ public sealed record RegisterRequest(
 
 /// <summary>Successful registration response — contains only the new user's ID.</summary>
 public sealed record RegisterResponse(Guid UserId);
+
+/// <summary>Payload for POST /api/auth/login.</summary>
+public sealed record LoginRequest(string Email, string Password);
+
+/// <summary>Payload for POST /api/auth/refresh.</summary>
+public sealed record RefreshRequest(Guid UserId, string RefreshToken);
+
+/// <summary>Successful authentication response.</summary>
+public sealed record AuthTokenResponse(
+    string AccessToken,
+    string RefreshToken,
+    int    ExpiresIn);

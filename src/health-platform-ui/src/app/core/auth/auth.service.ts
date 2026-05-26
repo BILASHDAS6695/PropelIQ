@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -28,21 +29,50 @@ export class AuthService {
     this.loadFromStorage();
   }
 
-  login(email: string, _password: string): void {
-    // TODO: Replace with real API call — _password will be sent to backend
-    const mockUser: User = {
-      id: '1',
-      email,
-      firstName: 'Sarah',
-      lastName: 'Chen',
-      role: 'patient',
-    };
-    const mockToken = 'stub-jwt-token';
+  login(email: string, password: string): Observable<void> {
+    return this.http
+      .post<{ accessToken: string; refreshToken: string; expiresIn: number }>(
+        `${environment.apiUrl}/auth/login`,
+        { email, password }
+      )
+      .pipe(
+        map((res) => {
+          const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
+          const user: User = {
+            id:        payload.sub,
+            email:     payload.email,
+            firstName: '',
+            lastName:  '',
+            role:      payload.role?.toLowerCase() as User['role'],
+          };
+          this.currentUser.set(user);
+          this.token.set(res.accessToken);
+          sessionStorage.setItem('auth_token',  res.accessToken);
+          sessionStorage.setItem('auth_userId', payload.sub);
+          sessionStorage.setItem('auth_user',   JSON.stringify(user));
+          localStorage.setItem('refresh_token', res.refreshToken);
+        })
+      );
+  }
 
-    this.currentUser.set(mockUser);
-    this.token.set(mockToken);
-    sessionStorage.setItem('auth_token', mockToken);
-    sessionStorage.setItem('auth_user', JSON.stringify(mockUser));
+  refresh(): Observable<void> {
+    const userId       = sessionStorage.getItem('auth_userId') ?? '';
+    const refreshToken = localStorage.getItem('refresh_token') ?? '';
+
+    return this.http
+      .post<{ accessToken: string; refreshToken: string; expiresIn: number }>(
+        `${environment.apiUrl}/auth/refresh`,
+        { userId, refreshToken }
+      )
+      .pipe(
+        map((res) => {
+          const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
+          this.token.set(res.accessToken);
+          sessionStorage.setItem('auth_token',  res.accessToken);
+          sessionStorage.setItem('auth_userId', payload.sub);
+          localStorage.setItem('refresh_token', res.refreshToken);
+        })
+      );
   }
 
   logout(): void {

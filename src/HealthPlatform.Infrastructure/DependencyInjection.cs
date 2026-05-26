@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddSingleton<ICacheService, RedisCacheService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, NoOpEmailSender>();
         services.AddHostedService<AppointmentSlotSeedService>();
 
