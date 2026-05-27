@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, NoOpEmailSender>();
         services.AddHostedService<SlotGenerationService>();
+        services.AddHostedService<SwapRequestExpiryService>();
 
         services.Configure<AccountSecuritySettings>(
             configuration.GetSection(AccountSecuritySettings.SectionName));
