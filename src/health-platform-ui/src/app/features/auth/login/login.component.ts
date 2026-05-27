@@ -160,8 +160,7 @@ export class LoginComponent implements OnInit {
           this.lockoutSeconds = lockoutSecs;
           this.serverError = this.formatLockout(lockoutSecs);
         } else {
-          this.serverError =
-            err?.error?.detail ?? 'Sign in failed. Please check your credentials.';
+          this.serverError = err?.error?.detail ?? 'Sign in failed. Please check your credentials.';
         }
       },
     });

@@ -133,4 +133,3 @@ export class AuthService {
     return JSON.parse(atob(paddedBase64)) as { sub: string; email?: string; role?: string };
   }
 }
-

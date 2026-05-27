@@ -50,9 +50,7 @@ function addBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unknow
 
 function isAuthEndpoint(url: string): boolean {
   return (
-    url.includes('/auth/login') ||
-    url.includes('/auth/refresh') ||
-    url.includes('/auth/logout')
+    url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/logout')
   );
 }
 
@@ -68,9 +66,7 @@ function handle401(
       take(1),
       switchMap(() => {
         const newToken = authService.getToken();
-        return newToken
-          ? next(addBearer(req, newToken))
-          : throwError(() => new Error('No token'));
+        return newToken ? next(addBearer(req, newToken)) : throwError(() => new Error('No token'));
       }),
     );
   }
