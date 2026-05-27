@@ -34,3 +34,14 @@ public sealed record AppointmentStatusChangedPayload(
     Guid   ProviderId,
     string OldStatus,
     string NewStatus);
+
+/// <summary>
+/// Broadcast to the staff-notifications SignalR group when a staff member
+/// force-books an appointment despite a hard scheduling conflict.
+/// </summary>
+public sealed record ConflictOverrideUsedPayload(
+    Guid   AppointmentId,
+    Guid   PatientId,
+    Guid   ProviderId,
+    string OverrideReason,
+    string ConflictSummary);

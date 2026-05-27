@@ -30,4 +30,24 @@ public sealed class NotificationHub : Hub
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"provider-{providerId}");
     }
+
+    /// <summary>
+    /// Subscribes the calling connection to the clinic-wide staff notifications
+    /// group so that override events and conflict alerts are delivered.
+    /// Requires Staff or Admin role.
+    /// </summary>
+    [Authorize(Policy = PolicyNames.Staff)]
+    public async Task SubscribeToStaffNotifications()
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, "staff-notifications");
+    }
+
+    /// <summary>
+    /// Removes the calling connection from the staff notifications group.
+    /// </summary>
+    [Authorize(Policy = PolicyNames.Staff)]
+    public async Task UnsubscribeFromStaffNotifications()
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, "staff-notifications");
+    }
 }

@@ -23,6 +23,9 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
 
         builder.Property(a => a.CancellationNote).HasMaxLength(500);
 
+        builder.Property(a => a.ConflictOverrideReason).HasMaxLength(500);
+        // IsConflictOverride is a non-nullable bool; EF maps to boolean column (default false).
+
         builder.HasIndex(a => a.PatientId);
         builder.HasIndex(a => a.ProviderId);
 
