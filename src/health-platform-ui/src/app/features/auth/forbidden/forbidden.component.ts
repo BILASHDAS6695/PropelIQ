@@ -12,16 +12,18 @@ import { RouterLink } from '@angular/router';
       <a routerLink="/dashboard" aria-label="Return to dashboard">Return to Dashboard</a>
     </div>
   `,
-  styles: [`
-    .forbidden-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      gap: 1rem;
-      text-align: center;
-    }
-  `]
+  styles: [
+    `
+      .forbidden-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        gap: 1rem;
+        text-align: center;
+      }
+    `,
+  ],
 })
 export class ForbiddenComponent {}
