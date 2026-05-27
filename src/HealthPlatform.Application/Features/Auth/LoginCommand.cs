@@ -11,4 +11,6 @@ public sealed record LoginResult(
     string? AccessToken,
     string? RefreshToken,
     int     ExpiresIn,
-    string? Error);
+    string? Error,
+    bool    PasswordChangeRequired  = false,
+    int?    LockoutSecondsRemaining = null);
