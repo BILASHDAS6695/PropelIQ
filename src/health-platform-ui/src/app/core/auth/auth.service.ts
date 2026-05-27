@@ -1,63 +1,57 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { AuthStore, AuthUser } from './auth.store';
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'patient' | 'staff' | 'admin';
-}
-
-interface JwtPayload {
-  sub: string;
-  email?: string;
-  role?: string;
-}
+// Re-export for consumers that currently import User from AuthService.
+export type { AuthUser as User };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly currentUser = signal<User | null>(null);
+  private readonly store = inject(AuthStore);
   private readonly token = signal<string | null>(null);
   private readonly http = inject(HttpClient);
-
-  readonly user = this.currentUser.asReadonly();
-  readonly isAuthenticated = computed(() => this.currentUser() !== null);
-  readonly userRole = computed(() => this.currentUser()?.role ?? null);
-
   private readonly router = inject(Router);
 
+  readonly user = this.store.user;
+  readonly isAuthenticated = this.store.isAuthenticated;
+  readonly userRole = this.store.userRole;
+
   constructor() {
-    this.loadFromStorage();
+    // Access token is memory-only; it is lost on page refresh.
+    // The auth interceptor will trigger a refresh automatically when the
+    // first API call returns 401, picking up the refresh token from localStorage.
   }
 
-  login(email: string, password: string): Observable<void> {
+  login(
+    email: string,
+    password: string,
+  ): Observable<{ passwordChangeRequired: boolean; lockoutSecondsRemaining?: number }> {
     return this.http
       .post<{
         accessToken: string;
         refreshToken: string;
         expiresIn: number;
+        passwordChangeRequired: boolean;
       }>(`${environment.apiUrl}/auth/login`, { email, password })
       .pipe(
         map((res) => {
           const payload = this.decodeJwtPayload(res.accessToken);
-          const user: User = {
+          const user: AuthUser = {
             id: payload.sub,
             email: payload.email ?? '',
             firstName: '',
             lastName: '',
-            role: payload.role?.toLowerCase() as User['role'],
+            role: (payload.role?.toLowerCase() ?? 'patient') as AuthUser['role'],
           };
-          this.currentUser.set(user);
+          this.store.setUser(user);
           this.token.set(res.accessToken);
-          sessionStorage.setItem('auth_token', res.accessToken);
           sessionStorage.setItem('auth_userId', payload.sub);
-          sessionStorage.setItem('auth_user', JSON.stringify(user));
           localStorage.setItem('refresh_token', res.refreshToken);
+          return { passwordChangeRequired: res.passwordChangeRequired ?? false };
         }),
       );
   }
@@ -76,7 +70,6 @@ export class AuthService {
         map((res) => {
           const payload = this.decodeJwtPayload(res.accessToken);
           this.token.set(res.accessToken);
-          sessionStorage.setItem('auth_token', res.accessToken);
           sessionStorage.setItem('auth_userId', payload.sub);
           localStorage.setItem('refresh_token', res.refreshToken);
         }),
@@ -97,16 +90,26 @@ export class AuthService {
   }
 
   clearAuthState(): void {
-    this.currentUser.set(null);
+    this.store.clearUser();
     this.token.set(null);
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_user');
     sessionStorage.removeItem('auth_userId');
     localStorage.removeItem('refresh_token');
   }
 
   getToken(): string | null {
     return this.token();
+  }
+
+  changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmNewPassword: string,
+  ): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, {
+      currentPassword,
+      newPassword,
+      confirmNewPassword,
+    });
   }
 
   register(payload: {
@@ -120,23 +123,14 @@ export class AuthService {
     return this.http.post<{ userId: string }>(`${environment.apiUrl}/auth/register`, payload);
   }
 
-  private loadFromStorage(): void {
-    const token = sessionStorage.getItem('auth_token');
-    const userJson = sessionStorage.getItem('auth_user');
-    if (token && userJson) {
-      this.token.set(token);
-      this.currentUser.set(JSON.parse(userJson) as User);
-    }
-  }
-
-  private decodeJwtPayload(token: string): JwtPayload {
+  private decodeJwtPayload(token: string): { sub: string; email?: string; role?: string } {
     const payloadPart = token.split('.')[1];
     if (!payloadPart) {
       throw new Error('Invalid JWT token payload');
     }
-
     const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
     const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
-    return JSON.parse(atob(paddedBase64)) as JwtPayload;
+    return JSON.parse(atob(paddedBase64)) as { sub: string; email?: string; role?: string };
   }
 }
+
