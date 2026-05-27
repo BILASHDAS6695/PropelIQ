@@ -21,5 +21,10 @@ public class Appointment : AuditableEntity
     public AppointmentSlot? Slot     { get; set; }     // null for walk-ins
     public IntakeRecord? IntakeRecord { get; set; }
     public PreferredSlotPreference? PreferredSlotPreference { get; set; }
-    public ICollection<Notification> Notifications { get; set; } = [];
+    public ICollection<Notification>    Notifications          { get; set; } = [];
+
+    // Swap requests initiated BY this appointment (requester side)
+    public ICollection<SlotSwapRequest> InitiatedSwapRequests { get; set; } = [];
+    // Swap requests targeting THIS appointment (target side)
+    public ICollection<SlotSwapRequest> ReceivedSwapRequests  { get; set; } = [];
 }
