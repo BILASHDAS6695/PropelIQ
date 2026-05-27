@@ -76,6 +76,41 @@ public sealed class ProvidersController : ControllerBase
         return Ok(slots);
     }
 
+    // ─── Provider Queue ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns the provider's daily appointment queue for the given date —
+    /// both scheduled online bookings and walk-in patients, ordered by
+    /// SlotTime (scheduled) and arrival order (walk-ins).
+    /// </summary>
+    /// <param name="id">Provider ID.</param>
+    /// <param name="date">Calendar date in <c>yyyy-MM-dd</c> format.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — combined queue list (empty array when none).<br/>
+    /// 400 Bad Request — <c>date</c> parameter is missing or invalid.
+    /// </returns>
+    [HttpGet("{id:guid}/queue")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<QueueEntryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),               StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetQueue(
+        Guid               id,
+        [FromQuery] string date,
+        CancellationToken  ct)
+    {
+        if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out var parsedDate))
+            return BadRequest(new ProblemDetails
+            {
+                Title  = "Invalid date format.",
+                Detail = "The 'date' query parameter must be in yyyy-MM-dd format.",
+                Status = StatusCodes.Status400BadRequest
+            });
+
+        var queue = await _sender.Send(new GetProviderQueueQuery(id, parsedDate), ct);
+        return Ok(queue);
+    }
+
     // ─── Schedule Rules ───────────────────────────────────────────────────────
 
     /// <summary>
