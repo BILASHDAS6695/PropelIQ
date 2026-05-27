@@ -16,15 +16,18 @@ internal sealed class InitiateSwapRequestCommandHandler
 
     private readonly IUnitOfWork                                _uow;
     private readonly ICurrentUserService                        _currentUser;
+    private readonly IEmailSender                               _email;
     private readonly ILogger<InitiateSwapRequestCommandHandler> _logger;
 
     public InitiateSwapRequestCommandHandler(
         IUnitOfWork                                 uow,
         ICurrentUserService                         currentUser,
+        IEmailSender                                email,
         ILogger<InitiateSwapRequestCommandHandler>  logger)
     {
         _uow         = uow;
         _currentUser = currentUser;
+        _email       = email;
         _logger      = logger;
     }
 
@@ -111,6 +114,39 @@ internal sealed class InitiateSwapRequestCommandHandler
         }, ct);
 
         await _uow.SaveChangesAsync(ct);
+
+        // ── 6. Notify target patient (email + in-app) ─────────────────────
+        var targetPatientProfile = await _uow.Repository<PatientProfile>()
+            .GetByIdAsync(targetAppt.PatientId, ct);
+
+        if (targetPatientProfile is not null)
+        {
+            await _uow.Repository<Notification>().AddAsync(new Notification
+            {
+                Id             = Guid.NewGuid(),
+                PatientId      = targetAppt.PatientId,
+                AppointmentId  = targetAppt.Id,
+                Channel        = NotificationChannel.Email,
+                Type           = NotificationType.SlotSwap,
+                SentAt         = now,
+                DeliveryStatus = DeliveryStatus.Sent,
+            }, ct);
+
+            await _uow.SaveChangesAsync(ct);
+
+            var targetUser = await _uow.Repository<User>()
+                .GetByIdAsync(targetPatientProfile.UserId, ct);
+
+            if (targetUser is not null)
+                await _email.SendAsync(
+                    targetUser.Email,
+                    "Someone wants to swap appointment slots with you",
+                    $"A patient has requested to swap slots. " +
+                    $"The proposed new time for your appointment is {requesterAppt.SlotTime:f} UTC. " +
+                    $"Your current appointment time is {targetAppt.SlotTime:f} UTC. " +
+                    "Log in to accept or decline.",
+                    ct);
+        }
 
         _logger.LogInformation(
             "Swap request {SwapId} created by patient {PatientId} targeting appointment {TargetId}",
