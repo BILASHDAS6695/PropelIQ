@@ -62,8 +62,10 @@ public sealed class AuthController : ControllerBase
     /// Authenticates a user and issues a JWT access token + refresh token.
     /// </summary>
     /// <returns>
-    /// 200 OK — token pair with expiresIn.<br/>
-    /// 401 Unauthorized — invalid credentials, inactive, or locked account.<br/>
+    /// 200 OK — token pair with expiresIn; passwordChangeRequired is true when
+    ///           the credential has expired (client must redirect to change-password).<br/>
+    /// 401 Unauthorized — invalid credentials, inactive account, or locked account
+    ///                    (lockoutSecondsRemaining is included when locked).<br/>
     /// 422 Unprocessable Entity — input validation failed.
     /// </returns>
     [HttpPost("login")]
@@ -80,18 +82,27 @@ public sealed class AuthController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return Unauthorized(new ProblemDetails
+            var problem = new ProblemDetails
             {
                 Status = StatusCodes.Status401Unauthorized,
                 Title  = "Authentication failed.",
                 Detail = result.Error
-            });
+            };
+
+            if (result.LockoutSecondsRemaining.HasValue)
+            {
+                problem.Extensions["lockoutSecondsRemaining"] =
+                    result.LockoutSecondsRemaining.Value;
+            }
+
+            return Unauthorized(problem);
         }
 
         return Ok(new AuthTokenResponse(
             result.AccessToken!,
             result.RefreshToken!,
-            result.ExpiresIn));
+            result.ExpiresIn,
+            result.PasswordChangeRequired));
     }
 
     /// <summary>
@@ -184,4 +195,5 @@ public sealed record RefreshRequest(Guid UserId, string RefreshToken);
 public sealed record AuthTokenResponse(
     string AccessToken,
     string RefreshToken,
-    int    ExpiresIn);
+    int    ExpiresIn,
+    bool   PasswordChangeRequired = false);
