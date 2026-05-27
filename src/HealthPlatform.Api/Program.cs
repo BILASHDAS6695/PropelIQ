@@ -1,4 +1,6 @@
+using Hangfire;
 using HealthChecks.UI.Client;
+using HealthPlatform.Infrastructure.Jobs;
 using HealthPlatform.Api.Authorization;
 using HealthPlatform.Api.Hubs;
 using HealthPlatform.Api.Logging;
@@ -35,6 +37,7 @@ try
     // Layer registrations
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddHangfireServer();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserService, HttpCurrentUserService>();
 
@@ -159,6 +162,14 @@ try
     app.UseAuthentication();
     app.UseMiddleware<SessionValidationMiddleware>();
     app.UseAuthorization();
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireAdminAuthorizationFilter()]
+    });
+    RecurringJob.AddOrUpdate<NoShowAutoMarkJob>(
+        recurringJobId: "auto-no-show-mark",
+        methodCall:     job => job.ExecuteAsync(CancellationToken.None),
+        cronExpression: Cron.Minutely());
     app.MapControllers();
     app.MapHub<NotificationHub>("/hubs/notifications");
     app.MapHealthChecks("/health", new HealthCheckOptions

@@ -28,6 +28,7 @@ internal sealed class UpdateAppointmentStatusCommandHandler
         {
             [AppointmentStatus.Arrived]    = AppointmentStatus.InProgress,
             [AppointmentStatus.InProgress] = AppointmentStatus.Completed,
+            [AppointmentStatus.NoShow]     = AppointmentStatus.Arrived,   // staff override for late arrivals
         };
 
     private readonly IUnitOfWork _uow;
@@ -54,12 +55,17 @@ internal sealed class UpdateAppointmentStatusCommandHandler
         {
             throw new ArgumentException(
                 $"Cannot transition from '{appointment.Status}' to '{target}'. " +
-                "Allowed transitions: Arrived → InProgress, InProgress → Completed.");
+                "Allowed transitions: Arrived → InProgress, InProgress → Completed, NoShow → Arrived.");
         }
 
         // ── 4. Mutate ─────────────────────────────────────────────────────
         var oldStatus = appointment.Status.ToString();
         appointment.Status = target;
+        if (appointment.Status == AppointmentStatus.Arrived
+            && oldStatus == AppointmentStatus.NoShow.ToString())
+        {
+            appointment.ArrivalTime = DateTimeOffset.UtcNow;
+        }
         _uow.Repository<Appointment>().Update(appointment);
 
         // ── 5. Persist (interceptor auto-writes audit log) ────────────────

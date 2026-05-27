@@ -309,6 +309,44 @@ public sealed class AppointmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Marks an appointment as NoShow (manual staff action).
+    /// The associated slot is freed immediately and a follow-up email is sent
+    /// to the patient.
+    /// </summary>
+    /// <param name="id">Appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — NoShow confirmed with updated patient no-show count.<br/>
+    /// 400 Bad Request — appointment is not in Scheduled or Booked state.<br/>
+    /// 401 Unauthorized — caller is not authenticated.<br/>
+    /// 403 Forbidden — caller does not have Staff or Admin role.<br/>
+    /// 404 Not Found — appointment does not exist.
+    /// </returns>
+    [HttpPost("{id:guid}/no-show")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(NoShowConfirmationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),         StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),         StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkNoShow(
+        [FromRoute] Guid  id,
+        CancellationToken ct)
+    {
+        var result = await _sender.Send(new MarkNoShowCommand(id, IsAutomatic: false), ct);
+
+        await _hub.Clients
+            .Group($"provider-{result.ProviderId}")
+            .SendAsync("AppointmentNoShow", new AppointmentNoShowPayload(
+                AppointmentId:           result.AppointmentId,
+                ProviderId:              result.ProviderId,
+                PatientId:               result.PatientId,
+                SlotTime:                result.SlotTime,
+                IsAutomatic:             false,
+                PatientTotalNoShowCount: result.PatientTotalNoShowCount), ct);
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Advances an appointment through the provider-driven status chain:
     /// Arrived → InProgress → Completed.
     /// Broadcasts a real-time notification to the provider's dashboard group.

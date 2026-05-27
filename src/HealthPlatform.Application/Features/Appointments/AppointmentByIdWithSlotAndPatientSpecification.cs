@@ -23,7 +23,8 @@ internal sealed class AppointmentByIdWithSlotAndPatientSpecification
     public List<Expression<Func<Appointment, object>>> Includes =>
     [
         a => a.Slot!,
-        a => a.Patient
+        a => a.Patient,
+        a => a.Patient.User,
     ];
 
     public Expression<Func<Appointment, object>>?      OrderBy           => null;

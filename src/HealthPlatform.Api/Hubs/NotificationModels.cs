@@ -45,3 +45,17 @@ public sealed record ConflictOverrideUsedPayload(
     Guid   ProviderId,
     string OverrideReason,
     string ConflictSummary);
+
+/// <summary>
+/// Broadcast to a provider's SignalR group when a patient is marked as
+/// NoShow (manually by staff or automatically by the Hangfire job).
+/// The <see cref="IsAutomatic"/> flag lets the UI differentiate the source.
+/// The associated slot has already been freed at this point.
+/// </summary>
+public sealed record AppointmentNoShowPayload(
+    Guid           AppointmentId,
+    Guid           ProviderId,
+    Guid           PatientId,
+    DateTimeOffset SlotTime,
+    bool           IsAutomatic,
+    int            PatientTotalNoShowCount);

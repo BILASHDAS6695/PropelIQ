@@ -17,6 +17,7 @@ internal sealed class PatientProfileConfiguration : IEntityTypeConfiguration<Pat
         builder.Property(p => p.Phone).HasMaxLength(20);
         builder.Property(p => p.InsuranceProviderName).HasMaxLength(200);
         builder.Property(p => p.InsuranceMemberId).HasMaxLength(100);
+        builder.Property(p => p.TotalNoShowCount).HasDefaultValue(0);
 
         builder.HasOne(p => p.User)
             .WithOne(u => u.PatientProfile)

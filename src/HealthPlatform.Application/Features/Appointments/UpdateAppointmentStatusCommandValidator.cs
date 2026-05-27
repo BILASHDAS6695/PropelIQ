@@ -5,7 +5,7 @@ namespace HealthPlatform.Application.Features.Appointments;
 internal sealed class UpdateAppointmentStatusCommandValidator
     : AbstractValidator<UpdateAppointmentStatusCommand>
 {
-    private static readonly string[] AllowedTargetStatuses = ["InProgress", "Completed"];
+    private static readonly string[] AllowedTargetStatuses = ["InProgress", "Completed", "Arrived"];
 
     public UpdateAppointmentStatusCommandValidator()
     {
