@@ -62,26 +62,30 @@ import { SlotDto } from '../../../core/models/booking.models';
       </div>
     </div>
   `,
-  styles: [`
-    .slot-chip {
-      padding: 0.5rem 0.75rem;
-      border-radius: 1.5rem;
-      border: 1px solid var(--p-surface-300, #d1d5db);
-      background: transparent;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .slot-chip:hover:not(.slot-chip--selected) {
-      background: var(--p-primary-50, #eff6ff);
-      border-color: var(--p-primary-300, #93c5fd);
-    }
-    .slot-chip--selected {
-      background: var(--p-primary-500, #3b82f6);
-      border-color: var(--p-primary-500, #3b82f6);
-      color: #fff;
-    }
-  `],
+  styles: [
+    `
+      .slot-chip {
+        padding: 0.5rem 0.75rem;
+        border-radius: 1.5rem;
+        border: 1px solid var(--p-surface-300, #d1d5db);
+        background: transparent;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .slot-chip:hover:not(.slot-chip--selected) {
+        background: var(--p-primary-50, #eff6ff);
+        border-color: var(--p-primary-300, #93c5fd);
+      }
+      .slot-chip--selected {
+        background: var(--p-primary-500, #3b82f6);
+        border-color: var(--p-primary-500, #3b82f6);
+        color: #fff;
+      }
+    `,
+  ],
 })
 export class SlotPickerComponent {
   readonly store = inject(BookingStore);

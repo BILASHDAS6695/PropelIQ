@@ -41,7 +41,7 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contr
               size="small"
               icon="pi pi-times"
               [outlined]="true"
-              (onClick)="cancel.emit(appointment)"
+              (onClick)="cancelRequest.emit(appointment)"
             />
           }
           @if (showReschedule) {
@@ -51,7 +51,7 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contr
               size="small"
               icon="pi pi-calendar-plus"
               [outlined]="true"
-              (onClick)="reschedule.emit(appointment)"
+              (onClick)="rescheduleRequest.emit(appointment)"
             />
           }
         </div>
@@ -64,33 +64,33 @@ export class AppointmentCardComponent {
   @Input() showCancel = false;
   @Input() showReschedule = false;
 
-  @Output() cancel = new EventEmitter<AppointmentItemDto>();
-  @Output() reschedule = new EventEmitter<AppointmentItemDto>();
+  @Output() cancelRequest = new EventEmitter<AppointmentItemDto>();
+  @Output() rescheduleRequest = new EventEmitter<AppointmentItemDto>();
 
   statusLabel(status: AppointmentStatus | string): string {
     const labels: Record<string, string> = {
-      Scheduled:  'Scheduled',
-      Booked:     'Booked',
-      Arrived:    'Arrived',
+      Scheduled: 'Scheduled',
+      Booked: 'Booked',
+      Arrived: 'Arrived',
       InProgress: 'In Progress',
-      Completed:  'Completed',
-      Cancelled:  'Cancelled',
-      NoShow:     'No Show',
-      WalkIn:     'Walk-In',
+      Completed: 'Completed',
+      Cancelled: 'Cancelled',
+      NoShow: 'No Show',
+      WalkIn: 'Walk-In',
     };
     return labels[status] ?? String(status);
   }
 
   statusSeverity(status: AppointmentStatus | string): TagSeverity {
     const map: Record<string, TagSeverity> = {
-      Scheduled:  'info',
-      Booked:     'info',
-      Arrived:    'warn',
+      Scheduled: 'info',
+      Booked: 'info',
+      Arrived: 'warn',
       InProgress: 'warn',
-      Completed:  'success',
-      Cancelled:  'secondary',
-      NoShow:     'danger',
-      WalkIn:     'contrast',
+      Completed: 'success',
+      Cancelled: 'secondary',
+      NoShow: 'danger',
+      WalkIn: 'contrast',
     };
     return map[status] ?? 'secondary';
   }

@@ -47,7 +47,11 @@ export class BookingConfirmationComponent {
   icsDataUri(appointmentTime: string, providerName: string): string {
     const start = new Date(appointmentTime);
     const end = new Date(start.getTime() + 30 * 60 * 1000);
-    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const fmt = (d: Date) =>
+      d
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d{3}/, '');
     const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',

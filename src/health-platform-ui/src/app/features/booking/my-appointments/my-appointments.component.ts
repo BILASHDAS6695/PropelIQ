@@ -81,7 +81,7 @@ const PAST_STATUSES: string[] = [
                   <app-appointment-card
                     [appointment]="appt"
                     [showCancel]="true"
-                    (cancel)="openCancelDialog($event)"
+                    (cancelRequest)="openCancelDialog($event)"
                   />
                 }
               }
@@ -131,11 +131,7 @@ const PAST_STATUSES: string[] = [
         </div>
       }
       <ng-template pTemplate="footer">
-        <p-button
-          label="Keep Appointment"
-          severity="secondary"
-          (onClick)="closeCancelDialog()"
-        />
+        <p-button label="Keep Appointment" severity="secondary" (onClick)="closeCancelDialog()" />
         <p-button
           label="Yes, Cancel"
           severity="danger"

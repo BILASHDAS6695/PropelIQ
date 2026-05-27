@@ -21,7 +21,15 @@ const SPECIALTIES = [
 @Component({
   selector: 'app-provider-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, SelectModule, SkeletonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CardModule,
+    ButtonModule,
+    InputTextModule,
+    SelectModule,
+    SkeletonModule,
+  ],
   template: `
     <div class="provider-list">
       <h2 class="text-xl font-semibold mb-3">Select a Provider</h2>
@@ -144,9 +152,7 @@ export class ProviderListComponent implements OnInit {
         .loadProviders(this.selectedSpecialty ?? undefined)
         .then(() =>
           this.filteredProviders.set(
-            this.store
-              .providers()
-              .filter((p) => !name || p.name.toLowerCase().includes(name)),
+            this.store.providers().filter((p) => !name || p.name.toLowerCase().includes(name)),
           ),
         );
     }

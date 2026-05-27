@@ -33,12 +33,12 @@ export interface AppointmentItemDto {
 }
 
 export enum AppointmentStatus {
-  Scheduled  = 'Scheduled',
-  Booked     = 'Booked',
-  Arrived    = 'Arrived',
-  Completed  = 'Completed',
-  Cancelled  = 'Cancelled',
-  NoShow     = 'NoShow',
-  WalkIn     = 'WalkIn',
+  Scheduled = 'Scheduled',
+  Booked = 'Booked',
+  Arrived = 'Arrived',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled',
+  NoShow = 'NoShow',
+  WalkIn = 'WalkIn',
   InProgress = 'InProgress',
 }

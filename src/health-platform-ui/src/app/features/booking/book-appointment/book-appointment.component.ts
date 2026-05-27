@@ -22,7 +22,6 @@ type BookingStep = 'provider' | 'slot' | 'form' | 'confirmation';
   ],
   template: `
     <div class="booking-page p-3" style="max-width:900px;margin:0 auto">
-
       <!-- Step indicator -->
       <ol class="flex gap-2 list-none p-0 mb-4 flex-wrap" aria-label="Booking steps">
         @for (s of steps; track s.key; let last = $last) {
@@ -33,7 +32,9 @@ type BookingStep = 'provider' | 'slot' | 'form' | 'confirmation';
             [class.text-color-secondary]="currentStep() !== s.key"
           >
             <i [class]="s.icon"></i> {{ s.label }}
-            @if (!last) { <span class="text-300 mx-1">›</span> }
+            @if (!last) {
+              <span class="text-300 mx-1">›</span>
+            }
           </li>
         }
       </ol>
@@ -86,9 +87,9 @@ export class BookAppointmentComponent {
   readonly currentStep = signal<BookingStep>('provider');
 
   readonly steps = [
-    { key: 'provider',     label: 'Provider',     icon: 'pi pi-user' },
-    { key: 'slot',         label: 'Date & Time',  icon: 'pi pi-calendar' },
-    { key: 'form',         label: 'Details',      icon: 'pi pi-file-edit' },
+    { key: 'provider', label: 'Provider', icon: 'pi pi-user' },
+    { key: 'slot', label: 'Date & Time', icon: 'pi pi-calendar' },
+    { key: 'form', label: 'Details', icon: 'pi pi-file-edit' },
     { key: 'confirmation', label: 'Confirmation', icon: 'pi pi-check-circle' },
   ] as const;
 
