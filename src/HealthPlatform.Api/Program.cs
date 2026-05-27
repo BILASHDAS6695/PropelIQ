@@ -2,7 +2,9 @@ using HealthChecks.UI.Client;
 using HealthPlatform.Api.Hubs;
 using HealthPlatform.Api.Logging;
 using HealthPlatform.Api.Middleware;
+using HealthPlatform.Api.Services;
 using HealthPlatform.Application;
+using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -32,6 +34,8 @@ try
     // Layer registrations
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICurrentUserService, HttpCurrentUserService>();
 
     // API services
     builder.Services.AddControllers();
