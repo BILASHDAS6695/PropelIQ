@@ -1,6 +1,7 @@
 using HealthPlatform.Api.Authorization;
 using HealthPlatform.Application.Features.Appointments;
 using HealthPlatform.Application.Features.SlotSwap;
+using HealthPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -147,6 +148,108 @@ public sealed class AppointmentsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Cancels an existing appointment.
+    /// Patients may only cancel their own appointment and only when more than
+    /// 2 hours remain until the start time.  Staff and Admin can cancel any
+    /// appointment regardless of the time remaining.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="request">Cancellation reason and optional note.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — cancellation confirmation.<br/>
+    /// 400 Bad Request — appointment already Arrived/Completed, or &lt; 2 h window (patient).<br/>
+    /// 403 Forbidden — patient trying to cancel another patient's appointment.<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/cancel")]
+    [Authorize]
+    [ProducesResponseType(typeof(CancellationConfirmationDto),  StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),      StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Cancel(
+        [FromRoute] Guid                    id,
+        [FromBody]  CancelAppointmentRequest request,
+        CancellationToken                   ct)
+    {
+        if (!Enum.TryParse<CancellationReason>(request.Reason, ignoreCase: true, out var reason))
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title  = "Bad Request",
+                Detail = $"'{request.Reason}' is not a valid cancellation reason. " +
+                         "Allowed values: ScheduleConflict, FeelingBetter, Other."
+            });
+
+        var confirmation = await _sender.Send(
+            new CancelAppointmentCommand(
+                id,
+                reason,
+                request.Note,
+                CallerIsStaff: User.IsInRole(nameof(UserRole.Staff))
+                            || User.IsInRole(nameof(UserRole.Admin))), ct);
+
+        return Ok(confirmation);
+    }
+
+    /// <summary>
+    /// Reschedules an existing appointment: cancels the current booking and
+    /// creates a new one on the requested slot in a single atomic operation.
+    /// The original visit reason is preserved.  If the new slot is unavailable
+    /// the current appointment is not cancelled (409 Conflict returned instead).
+    /// </summary>
+    /// <param name="id">The appointment ID to reschedule.</param>
+    /// <param name="request">New slot ID, cancellation reason, and optional note.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 201 Created — reschedule confirmation with new appointment ID and time.<br/>
+    /// 400 Bad Request — appointment already Arrived/Completed, or &lt; 2 h window (patient).<br/>
+    /// 403 Forbidden — patient trying to reschedule another patient's appointment.<br/>
+    /// 404 Not Found — appointment or new slot does not exist.<br/>
+    /// 409 Conflict — new slot is no longer available; existing appointment unchanged.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/reschedule")]
+    [Authorize]
+    [ProducesResponseType(typeof(RescheduleConfirmationDto),    StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),      StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Reschedule(
+        [FromRoute] Guid                        id,
+        [FromBody]  RescheduleAppointmentRequest request,
+        CancellationToken                       ct)
+    {
+        if (!Enum.TryParse<CancellationReason>(request.Reason, ignoreCase: true, out var reason))
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title  = "Bad Request",
+                Detail = $"'{request.Reason}' is not a valid cancellation reason. " +
+                         "Allowed values: ScheduleConflict, FeelingBetter, Other."
+            });
+
+        var confirmation = await _sender.Send(
+            new RescheduleAppointmentCommand(
+                id,
+                request.NewSlotId,
+                reason,
+                request.Note,
+                CallerIsStaff: User.IsInRole(nameof(UserRole.Staff))
+                            || User.IsInRole(nameof(UserRole.Admin))), ct);
+
+        return CreatedAtAction(
+            nameof(Reschedule),
+            new { appointmentId = confirmation.NewAppointmentId },
+            confirmation);
+    }
 }
 
 /// <summary>Payload for booking an appointment slot.</summary>
@@ -165,3 +268,14 @@ public sealed record InitiateSwapRequest(Guid TargetAppointmentId);
 
 /// <summary>Request body for cancelling a swap request.</summary>
 public sealed record CancelSwapRequest(string? Reason = null);
+
+/// <summary>Payload for cancelling an appointment.</summary>
+public sealed record CancelAppointmentRequest(
+    string  Reason,
+    string? Note = null);
+
+/// <summary>Payload for rescheduling an appointment.</summary>
+public sealed record RescheduleAppointmentRequest(
+    Guid    NewSlotId,
+    string  Reason,
+    string? Note = null);
