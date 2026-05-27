@@ -5,6 +5,7 @@ using HealthPlatform.Application.Settings;
 using HealthPlatform.Infrastructure.Cache;
 using HealthPlatform.Infrastructure.Jobs;
 using HealthPlatform.Infrastructure.Messaging;
+using HealthPlatform.Infrastructure.Reminders;
 using HealthPlatform.Infrastructure.Persistence;
 using HealthPlatform.Infrastructure.Persistence.Interceptors;
 using HealthPlatform.Infrastructure.Persistence.Seed;
@@ -83,6 +84,11 @@ public static class DependencyInjection
 
         services.Configure<SmtpSettings>(
             configuration.GetSection(SmtpSettings.SectionName));
+
+        services.AddTransient<AppointmentReminderJob>();
+        services.AddScoped<IReminderScheduler, HangfireReminderScheduler>();
+        services.Configure<ReminderSettings>(
+            configuration.GetSection(ReminderSettings.SectionName));
 
         services.AddHealthChecks()
             .AddNpgSql(

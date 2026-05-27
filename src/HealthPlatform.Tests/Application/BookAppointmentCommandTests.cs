@@ -24,6 +24,7 @@ public class BookAppointmentCommandTests
         services.AddScoped(_ => uow);
         services.AddScoped(_ => currentUser);
         services.AddScoped(_ => emailSender);
+        services.AddScoped<IReminderScheduler>(_ => new NoOpReminderScheduler());
         return services.BuildServiceProvider().GetRequiredService<ISender>();
     }
 
