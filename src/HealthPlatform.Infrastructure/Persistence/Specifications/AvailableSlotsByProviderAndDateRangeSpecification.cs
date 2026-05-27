@@ -1,4 +1,5 @@
 using HealthPlatform.Domain.Entities;
+using HealthPlatform.Domain.Enums;
 
 namespace HealthPlatform.Infrastructure.Persistence.Specifications;
 
@@ -15,9 +16,9 @@ public sealed class AvailableSlotsByProviderAndDateRangeSpecification
         DateTimeOffset from,
         DateTimeOffset to)
         : base(s => s.ProviderId == providerId
-                 && s.IsAvailable
-                 && s.StartTime >= from
-                 && s.StartTime < to)
+                 && s.Status     == SlotStatus.Available
+                 && s.StartTime  >= from
+                 && s.StartTime  <  to)
     {
         ApplyOrderBy(s => s.StartTime);
     }
