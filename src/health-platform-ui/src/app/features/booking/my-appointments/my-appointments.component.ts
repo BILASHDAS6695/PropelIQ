@@ -55,7 +55,10 @@ const PAST_STATUSES: string[] = [
           </div>
         }
       } @else {
-        <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($event)">
+        <p-tabs
+          [value]="activeTab()"
+          (valueChange)="activeTab.set($event?.toString() ?? 'upcoming')"
+        >
           <p-tablist>
             <p-tab value="upcoming">
               Upcoming
