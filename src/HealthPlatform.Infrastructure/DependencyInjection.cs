@@ -1,4 +1,5 @@
 using HealthPlatform.Application.Interfaces;
+using HealthPlatform.Application.Settings;
 using HealthPlatform.Infrastructure.Cache;
 using HealthPlatform.Infrastructure.Messaging;
 using HealthPlatform.Infrastructure.Persistence;
@@ -43,6 +44,9 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, NoOpEmailSender>();
         services.AddHostedService<AppointmentSlotSeedService>();
+
+        services.Configure<AccountSecuritySettings>(
+            configuration.GetSection(AccountSecuritySettings.SectionName));
 
         services.AddHealthChecks()
             .AddNpgSql(
