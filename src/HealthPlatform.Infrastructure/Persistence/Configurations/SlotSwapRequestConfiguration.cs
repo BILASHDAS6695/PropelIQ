@@ -18,6 +18,28 @@ internal sealed class SlotSwapRequestConfiguration
         builder.Property(r => r.CancellationReason)
             .HasMaxLength(500);
 
+        // ── Staff mediation properties (US-030) ───────────────────────────
+        builder.Property(r => r.OverrideReason)
+            .HasMaxLength(500);
+
+        builder.Property(r => r.OverriddenAt)
+            .IsRequired(false);
+
+        builder.Property(r => r.MediatedByUserId)
+            .IsRequired(false);
+
+        builder.Property(r => r.ThreeWayNewTargetSlotId)
+            .IsRequired(false);
+
+        // Optimistic concurrency token — maps to PostgreSQL's xmin system column.
+        // EF Core includes xmin in UPDATE WHERE clauses; a mismatch raises
+        // DbUpdateConcurrencyException when two staff members mediate simultaneously.
+        builder.Property(r => r.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
+
         // ── Filtered unique index: only one active (Pending) swap request ──
         // per requester appointment. Completed/cancelled/expired requests are
         // excluded so historical records can accumulate.

@@ -566,4 +566,3 @@ public sealed record UpdateStatusRequest(string NewStatus);
 
 /// <summary>Payload for the pre-flight conflict check.</summary>
 public sealed record ConflictCheckRequest(Guid SlotId);
->>>>>>> origin/main

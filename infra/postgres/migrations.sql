@@ -562,3 +562,32 @@ BEGIN
 END $EF$;
 COMMIT;
 
+
+-- ============================================================
+-- US-030: Staff Swap Mediation — extend slot_swap_requests
+-- ============================================================
+
+ALTER TABLE slot_swap_requests
+    ADD COLUMN IF NOT EXISTS override_reason               VARCHAR(500),
+    ADD COLUMN IF NOT EXISTS mediated_by_user_id           UUID,
+    ADD COLUMN IF NOT EXISTS overridden_at                 TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS three_way_new_target_slot_id  UUID;
+
+-- Foreign key: staff user who performed the override
+ALTER TABLE slot_swap_requests
+    ADD CONSTRAINT fk_slot_swap_requests_mediated_by_user
+    FOREIGN KEY (mediated_by_user_id)
+    REFERENCES users (id)
+    ON DELETE RESTRICT;
+
+-- Note: xmin concurrency token is a built-in PostgreSQL system column —
+-- no ALTER TABLE required. EF Core/Npgsql reads it automatically.
+
+COMMENT ON COLUMN slot_swap_requests.override_reason IS
+    'Mandatory reason text for staff force-approve, force-decline, or three-way reassignment.';
+COMMENT ON COLUMN slot_swap_requests.mediated_by_user_id IS
+    'User ID of the staff member who performed the override action.';
+COMMENT ON COLUMN slot_swap_requests.overridden_at IS
+    'UTC timestamp when the staff override was applied.';
+COMMENT ON COLUMN slot_swap_requests.three_way_new_target_slot_id IS
+    'For three-way reassignment: new slot ID assigned to the target patient.';
