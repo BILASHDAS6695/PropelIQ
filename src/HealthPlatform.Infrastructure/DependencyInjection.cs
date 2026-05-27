@@ -56,7 +56,14 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IEmailSender, NoOpEmailSender>();
+
+        // Email: MailKitEmailSender is the concrete SMTP sender used only by
+        // SendEmailJob. HangfireEmailDispatcher is the IEmailSender registered
+        // in DI — it enqueues a job instead of sending inline.
+        services.AddScoped<MailKitEmailSender>();
+        services.AddScoped<IEmailSender, HangfireEmailDispatcher>();
+        services.AddScoped<IBackgroundJobClient, BackgroundJobClient>();
+
         services.AddHostedService<SlotGenerationService>();
 
         services.AddHangfire(config =>
@@ -72,6 +79,9 @@ public static class DependencyInjection
 
         services.Configure<AccountSecuritySettings>(
             configuration.GetSection(AccountSecuritySettings.SectionName));
+
+        services.Configure<SmtpSettings>(
+            configuration.GetSection(SmtpSettings.SectionName));
 
         services.AddHealthChecks()
             .AddNpgSql(
