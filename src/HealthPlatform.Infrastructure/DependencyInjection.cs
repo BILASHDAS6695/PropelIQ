@@ -2,6 +2,7 @@ using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Infrastructure.Cache;
 using HealthPlatform.Infrastructure.Messaging;
 using HealthPlatform.Infrastructure.Persistence;
+using HealthPlatform.Infrastructure.Persistence.Interceptors;
 using HealthPlatform.Infrastructure.Persistence.Seed;
 using HealthPlatform.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +18,16 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
             options
                 .UseNpgsql(
                     configuration.GetConnectionString("DefaultConnection"),
                     npgsqlOptions => npgsqlOptions.MigrationsAssembly(
                         typeof(ApplicationDbContext).Assembly.FullName))
-                .UseSnakeCaseNamingConvention());
+                .UseSnakeCaseNamingConvention()
+                .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         var redisConfig = ConfigurationOptions.Parse(
             configuration["Redis:ConnectionString"] ?? "localhost:6379");
