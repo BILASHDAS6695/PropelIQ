@@ -11,7 +11,8 @@ public class Appointment : AuditableEntity
     public DateTimeOffset SlotTime { get; set; }
     public AppointmentStatus Status { get; set; }
     public Guid? PreferredSlotId { get; set; }
-    public bool IsWalkIn { get; set; }
+    public bool    IsWalkIn    { get; set; }
+    public string? VisitReason { get; set; }
 
     public PatientProfile Patient { get; set; } = null!;
     public Provider Provider { get; set; } = null!;

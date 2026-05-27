@@ -17,6 +17,31 @@ public sealed class ProvidersController : ControllerBase
 
     public ProvidersController(ISender sender) => _sender = sender;
 
+    // ─── Provider Listing ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns all active providers, optionally filtered by specialty
+    /// (case-insensitive substring match), ordered by name.
+    /// </summary>
+    /// <param name="specialty">
+    /// Optional specialty filter (e.g., <c>Cardiology</c>).
+    /// Omit to return all providers.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — list of providers (empty array when none match).
+    /// </returns>
+    [HttpGet]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<ProviderDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProviders(
+        [FromQuery] string? specialty,
+        CancellationToken   ct)
+    {
+        var providers = await _sender.Send(new GetProvidersQuery(specialty), ct);
+        return Ok(providers);
+    }
+
     // ─── Slots ───────────────────────────────────────────────────────────────
 
     /// <summary>

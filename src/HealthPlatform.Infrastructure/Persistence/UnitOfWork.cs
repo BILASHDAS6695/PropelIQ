@@ -1,4 +1,6 @@
 using HealthPlatform.Application.Interfaces;
+using HealthPlatform.Domain.Common.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthPlatform.Infrastructure.Persistence;
 
@@ -20,8 +22,19 @@ internal sealed class UnitOfWork : IUnitOfWork
         return (IRepository<T>)repo;
     }
 
-    public Task<int> SaveChangesAsync(CancellationToken ct = default)
-        => _context.SaveChangesAsync(ct);
+    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            return await _context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConflictException(
+                "A concurrency conflict occurred. The resource was modified by another request.")
+            { Data = { ["inner"] = ex.Message } };
+        }
+    }
 
     public void Dispose() => _context.Dispose();
 }
