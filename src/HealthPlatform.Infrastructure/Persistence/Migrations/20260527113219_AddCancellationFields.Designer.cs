@@ -4,6 +4,7 @@ using System.Text.Json;
 using HealthPlatform.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HealthPlatform.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527113219_AddCancellationFields")]
+    partial class AddCancellationFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1362,88 +1365,6 @@ namespace HealthPlatform.Infrastructure.Persistence.Migrations
                     b.ToTable("provider_unavailabilities", (string)null);
                 });
 
-            modelBuilder.Entity("HealthPlatform.Domain.Entities.SlotSwapRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CancellationReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("cancellation_reason");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_deleted");
-
-                    b.Property<Guid>("RequesterAppointmentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("requester_appointment_id");
-
-                    b.Property<Guid>("RequesterPatientId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("requester_patient_id");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("TargetAppointmentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("target_appointment_id");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id")
-                        .HasName("pk_slot_swap_requests");
-
-                    b.HasIndex("RequesterAppointmentId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_slot_swap_requests_active_per_appointment")
-                        .HasFilter("status = 'Pending'");
-
-                    b.HasIndex("RequesterPatientId")
-                        .HasDatabaseName("ix_slot_swap_requests_requester_patient_id");
-
-                    b.HasIndex("TargetAppointmentId")
-                        .HasDatabaseName("ix_slot_swap_requests_target_appointment_id");
-
-                    b.HasIndex("Status", "ExpiresAt")
-                        .HasDatabaseName("ix_slot_swap_requests_status_expires");
-
-                    b.ToTable("slot_swap_requests", (string)null);
-                });
-
             modelBuilder.Entity("HealthPlatform.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1736,47 +1657,13 @@ namespace HealthPlatform.Infrastructure.Persistence.Migrations
                     b.Navigation("Provider");
                 });
 
-            modelBuilder.Entity("HealthPlatform.Domain.Entities.SlotSwapRequest", b =>
-                {
-                    b.HasOne("HealthPlatform.Domain.Entities.Appointment", "RequesterAppointment")
-                        .WithMany("InitiatedSwapRequests")
-                        .HasForeignKey("RequesterAppointmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_slot_swap_requests_appointments_requester_appointment_id");
-
-                    b.HasOne("HealthPlatform.Domain.Entities.PatientProfile", "RequesterPatient")
-                        .WithMany()
-                        .HasForeignKey("RequesterPatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_slot_swap_requests_patient_profiles_requester_patient_id");
-
-                    b.HasOne("HealthPlatform.Domain.Entities.Appointment", "TargetAppointment")
-                        .WithMany("ReceivedSwapRequests")
-                        .HasForeignKey("TargetAppointmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_slot_swap_requests_appointments_target_appointment_id");
-
-                    b.Navigation("RequesterAppointment");
-
-                    b.Navigation("RequesterPatient");
-
-                    b.Navigation("TargetAppointment");
-                });
-
             modelBuilder.Entity("HealthPlatform.Domain.Entities.Appointment", b =>
                 {
-                    b.Navigation("InitiatedSwapRequests");
-
                     b.Navigation("IntakeRecord");
 
                     b.Navigation("Notifications");
 
                     b.Navigation("PreferredSlotPreference");
-
-                    b.Navigation("ReceivedSwapRequests");
                 });
 
             modelBuilder.Entity("HealthPlatform.Domain.Entities.AppointmentSlot", b =>
