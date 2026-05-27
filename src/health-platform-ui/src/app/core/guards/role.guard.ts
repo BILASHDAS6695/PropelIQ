@@ -12,7 +12,7 @@ export const roleGuard = (...allowedRoles: string[]): CanActivateFn => {
       return true;
     }
 
-    router.navigate(['/dashboard']);
+    router.navigate(['/forbidden']);
     return false;
   };
 };

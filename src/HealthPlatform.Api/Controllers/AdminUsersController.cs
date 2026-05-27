@@ -1,3 +1,4 @@
+using HealthPlatform.Api.Authorization;
 using HealthPlatform.Application.Features.Admin;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ namespace HealthPlatform.Api.Controllers;
 
 [ApiController]
 [Route("api/admin/users")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = PolicyNames.Admin)]
 public sealed class AdminUsersController : ControllerBase
 {
     private readonly ISender _sender;

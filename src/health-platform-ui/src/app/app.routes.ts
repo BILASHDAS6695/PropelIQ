@@ -1,10 +1,13 @@
 import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layout/app-layout.component';
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: AppLayoutComponent,
+    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',
@@ -27,6 +30,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin',
+        canActivate: [roleGuard('admin')],
         loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -41,6 +45,11 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () =>
       import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./features/auth/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

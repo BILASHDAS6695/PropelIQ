@@ -1,0 +1,14 @@
+# Enforce LF line endings for all source files.
+# This prevents prettier/prettier "Delete CRLF" errors in CI on Linux runners.
+* text=auto eol=lf
+
+# Explicitly mark binary files so Git never touches their line endings.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

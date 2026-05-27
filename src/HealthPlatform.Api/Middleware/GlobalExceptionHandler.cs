@@ -30,12 +30,13 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
     {
         var (statusCode, title) = exception switch
         {
-            NotFoundException           => (StatusCodes.Status404NotFound,                "Resource Not Found"),
+            NotFoundException           => (StatusCodes.Status404NotFound,              "Resource Not Found"),
             ConflictException           => (StatusCodes.Status409Conflict,              "Conflict"),
             ValidationException         => (StatusCodes.Status422UnprocessableEntity,   "Validation Failed"),
             ArgumentException           => (StatusCodes.Status400BadRequest,            "Bad Request"),
-            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized,        "Unauthorized"),
-            _                           => (StatusCodes.Status500InternalServerError, "Internal Server Error")
+            ForbiddenAccessException    => (StatusCodes.Status403Forbidden,             "Forbidden"),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized,          "Unauthorized"),
+            _                           => (StatusCodes.Status500InternalServerError,   "Internal Server Error")
         };
 
         _logger.LogError(
