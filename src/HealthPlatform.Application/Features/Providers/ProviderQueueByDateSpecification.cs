@@ -27,7 +27,8 @@ internal sealed class ProviderQueueByDateSpecification : ISpecification<Appointm
         a => a.ProviderId == _providerId
           && (a.Status == AppointmentStatus.Scheduled
            || a.Status == AppointmentStatus.WalkIn
-           || a.Status == AppointmentStatus.Booked)
+           || a.Status == AppointmentStatus.Booked
+           || a.Status == AppointmentStatus.Arrived)
           && a.SlotTime >= _dayStart
           && a.SlotTime <= _dayEnd;
 

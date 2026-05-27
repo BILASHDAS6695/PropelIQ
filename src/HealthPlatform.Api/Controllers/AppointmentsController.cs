@@ -1,10 +1,12 @@
 using HealthPlatform.Api.Authorization;
+using HealthPlatform.Api.Hubs;
 using HealthPlatform.Application.Features.Appointments;
 using HealthPlatform.Application.Features.SlotSwap;
 using HealthPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace HealthPlatform.Api.Controllers;
 
@@ -15,9 +17,16 @@ namespace HealthPlatform.Api.Controllers;
 [Route("api/appointments")]
 public sealed class AppointmentsController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly ISender                      _sender;
+    private readonly IHubContext<NotificationHub> _hub;
 
-    public AppointmentsController(ISender sender) => _sender = sender;
+    public AppointmentsController(
+        ISender                      sender,
+        IHubContext<NotificationHub> hub)
+    {
+        _sender = sender;
+        _hub    = hub;
+    }
 
     /// <summary>
     /// Books an available appointment slot for the authenticated patient.
@@ -147,6 +156,101 @@ public sealed class AppointmentsController : ControllerBase
             new CancelSwapRequestCommand(swapRequestId, request?.Reason), ct);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Searches today's appointments by patient name fragment or exact appointment ID.
+    /// Optionally scoped to one provider.  Front-desk staff use this to locate a
+    /// patient on arrival before marking them as Arrived.
+    /// </summary>
+    /// <param name="providerId">Optional provider filter.</param>
+    /// <param name="patientName">Partial patient name (case-insensitive, min 2 chars).</param>
+    /// <param name="appointmentId">Exact appointment ID filter.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — list of matching appointments for today.<br/>
+    /// 422 Unprocessable Entity — no search filter provided, or name too short.
+    /// </returns>
+    [HttpGet("today")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(IReadOnlyList<TodayAppointmentItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),               StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SearchToday(
+        [FromQuery] Guid?   providerId,
+        [FromQuery] string? patientName,
+        [FromQuery] Guid?   appointmentId,
+        CancellationToken   ct)
+    {
+        var results = await _sender.Send(
+            new TodayAppointmentsSearchQuery(providerId, patientName, appointmentId), ct);
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// Marks a booked appointment as Arrived and broadcasts a real-time
+    /// notification to the provider's dashboard.  Staff and Admin only.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — arrival confirmation including late-arrival flag.<br/>
+    /// 400 Bad Request — appointment status is not Scheduled or Booked.<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/arrive")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(ArrivalConfirmationDto),  StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Arrive(
+        [FromRoute] Guid  id,
+        CancellationToken ct)
+    {
+        var confirmation = await _sender.Send(new MarkPatientArrivedCommand(id), ct);
+
+        await _hub.Clients
+            .Group($"provider-{confirmation.ProviderId}")
+            .SendAsync(
+                "PatientArrived",
+                new PatientArrivedPayload(
+                    confirmation.AppointmentId,
+                    confirmation.ProviderId,
+                    confirmation.PatientId,
+                    confirmation.PatientFullName,
+                    confirmation.ArrivalTime,
+                    confirmation.IsLateArrival),
+                ct);
+
+        return Ok(confirmation);
+    }
+
+    /// <summary>
+    /// Reverts an accidental patient check-in back to Scheduled status.
+    /// Only succeeds within 5 minutes of the original check-in timestamp.
+    /// Staff and Admin only.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — revert confirmation.<br/>
+    /// 400 Bad Request — appointment is not Arrived, or the 5-minute window has expired.<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/revert-arrival")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(RevertArrivalConfirmationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),               StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),               StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),     StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> RevertArrival(
+        [FromRoute] Guid  id,
+        CancellationToken ct)
+    {
+        var confirmation = await _sender.Send(new RevertArrivalCommand(id), ct);
+        return Ok(confirmation);
     }
 
     /// <summary>
