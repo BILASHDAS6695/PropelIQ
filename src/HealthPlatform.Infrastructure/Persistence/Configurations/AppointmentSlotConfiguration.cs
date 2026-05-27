@@ -23,5 +23,10 @@ internal sealed class AppointmentSlotConfiguration : IEntityTypeConfiguration<Ap
             .WithMany(p => p.AppointmentSlots)
             .HasForeignKey(s => s.ProviderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // PostgreSQL xmin system column as optimistic-concurrency token.
+        // Allows EF to detect concurrent slot-status changes and throw
+        // DbUpdateConcurrencyException ("first wins" booking race).
+        builder.Property<uint>("xmin").HasColumnType("xid").IsRowVersion();
     }
 }

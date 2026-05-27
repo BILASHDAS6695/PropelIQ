@@ -14,9 +14,12 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(a => a.VisitReason).HasMaxLength(500);
+
         builder.HasIndex(a => a.PatientId);
         builder.HasIndex(a => a.ProviderId);
         builder.HasIndex(a => a.SlotId).IsUnique();
+        builder.HasIndex(a => new { a.PatientId, a.ProviderId, a.SlotTime });
 
         builder.HasOne(a => a.Patient)
             .WithMany(p => p.Appointments)
