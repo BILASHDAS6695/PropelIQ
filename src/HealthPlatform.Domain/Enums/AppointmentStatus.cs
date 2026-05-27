@@ -7,5 +7,6 @@ public enum AppointmentStatus
     Arrived   = 2,
     Completed = 3,
     Cancelled = 4,
-    NoShow    = 5
+    NoShow    = 5,
+    WalkIn    = 6    // Unscheduled walk-in; uses QueuePosition instead of SlotId
 }
