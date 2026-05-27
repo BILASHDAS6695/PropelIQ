@@ -41,7 +41,14 @@ public static class DependencyInjection
         services.AddSingleton<IConnectionMultiplexer>(
             ConnectionMultiplexer.Connect(redisConfig));
 
-        services.AddScoped<ISessionStore, RedisSessionStore>();
+        var useInMemorySessionStore = bool.Parse(
+            configuration["Redis:UseInMemorySessionStore"] ?? "false");
+
+        if (useInMemorySessionStore)
+            services.AddSingleton<ISessionStore, InMemorySessionStore>();
+        else
+            services.AddScoped<ISessionStore, RedisSessionStore>();
+
         services.AddSingleton<ICacheService, RedisCacheService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
@@ -63,6 +70,7 @@ public static class DependencyInjection
             .AddRedis(
                 configuration["Redis:ConnectionString"] ?? "localhost:6379",
                 name: "redis",
+                failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded,
                 tags: ["cache", "ready"]);
 
         return services;
