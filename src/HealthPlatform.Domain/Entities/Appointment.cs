@@ -28,6 +28,15 @@ public class Appointment : AuditableEntity
     /// <summary>Mandatory justification supplied by staff when IsConflictOverride is true.</summary>
     public string? ConflictOverrideReason { get; set; }
 
+    // ── Reminder scheduling ───────────────────────────────────────────────────
+    /// <summary>Hangfire job ID for the 24-hour-before reminder. Null when not
+    /// yet scheduled or after the job has been deleted.</summary>
+    public string? Reminder24hJobId { get; set; }
+
+    /// <summary>Hangfire job ID for the 2-hour-before reminder. Null when not
+    /// yet scheduled or after the job has been deleted.</summary>
+    public string? Reminder2hJobId { get; set; }
+
     public PatientProfile   Patient  { get; set; } = null!;
     public Provider         Provider { get; set; } = null!;
     public AppointmentSlot? Slot     { get; set; }     // null for walk-ins

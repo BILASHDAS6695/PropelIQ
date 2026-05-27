@@ -24,15 +24,18 @@ internal sealed class BookAppointmentCommandHandler
     private readonly IUnitOfWork         _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IEmailSender        _emailSender;
+    private readonly IReminderScheduler  _reminders;
 
     public BookAppointmentCommandHandler(
         IUnitOfWork         uow,
         ICurrentUserService currentUser,
-        IEmailSender        emailSender)
+        IEmailSender        emailSender,
+        IReminderScheduler  reminders)
     {
         _uow         = uow;
         _currentUser = currentUser;
         _emailSender = emailSender;
+        _reminders   = reminders;
     }
 
     public async Task<BookingConfirmationDto> Handle(
@@ -143,6 +146,11 @@ internal sealed class BookAppointmentCommandHandler
                 emailBody,
                 ct);
         }
+
+        // ── 8. Schedule reminder jobs (24 h + 2 h before slot time) ──────
+        // ScheduleAsync skips past-due triggers automatically and persists
+        // the returned Hangfire job IDs back onto the appointment entity.
+        await _reminders.ScheduleAsync(appointment, ct);
 
         return new BookingConfirmationDto(
             appointment.Id,

@@ -28,15 +28,18 @@ internal sealed class RescheduleAppointmentCommandHandler
     private readonly IUnitOfWork         _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IEmailSender        _emailSender;
+    private readonly IReminderScheduler  _reminders;
 
     public RescheduleAppointmentCommandHandler(
         IUnitOfWork         uow,
         ICurrentUserService currentUser,
-        IEmailSender        emailSender)
+        IEmailSender        emailSender,
+        IReminderScheduler  reminders)
     {
         _uow         = uow;
         _currentUser = currentUser;
         _emailSender = emailSender;
+        _reminders   = reminders;
     }
 
     public async Task<RescheduleConfirmationDto> Handle(
@@ -129,7 +132,11 @@ internal sealed class RescheduleAppointmentCommandHandler
         _uow.Repository<AppointmentSlot>().Update(newSlot);
         await _uow.Repository<Appointment>().AddAsync(newAppointment, ct);
 
-        // ── 9. Persist atomically ─────────────────────────────────────────
+        // ── 9. Cancel pending reminders for old appointment + persist ─────
+        // Cancel() nulls job IDs in-memory; SaveChanges commits the slot
+        // mutations, status change, and null job IDs in one round-trip.
+        _reminders.Cancel(existing);
+
         await _uow.SaveChangesAsync(ct);
 
         // ── 10. Send reschedule confirmation email ────────────────────────
@@ -151,6 +158,9 @@ internal sealed class RescheduleAppointmentCommandHandler
                 emailBody,
                 ct);
         }
+
+        // ── 11. Schedule reminders for new appointment ────────────────────
+        await _reminders.ScheduleAsync(newAppointment, ct);
 
         return new RescheduleConfirmationDto(
             existing.Id,

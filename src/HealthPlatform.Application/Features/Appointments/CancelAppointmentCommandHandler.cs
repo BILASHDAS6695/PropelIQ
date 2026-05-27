@@ -26,15 +26,18 @@ internal sealed class CancelAppointmentCommandHandler
     private readonly IUnitOfWork         _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IEmailSender        _emailSender;
+    private readonly IReminderScheduler  _reminders;
 
     public CancelAppointmentCommandHandler(
         IUnitOfWork         uow,
         ICurrentUserService currentUser,
-        IEmailSender        emailSender)
+        IEmailSender        emailSender,
+        IReminderScheduler  reminders)
     {
         _uow         = uow;
         _currentUser = currentUser;
         _emailSender = emailSender;
+        _reminders   = reminders;
     }
 
     public async Task<CancellationConfirmationDto> Handle(
@@ -94,7 +97,10 @@ internal sealed class CancelAppointmentCommandHandler
             _uow.Repository<AppointmentSlot>().Update(appointment.Slot);
         }
 
-        // ── 7. Persist (interceptor auto-writes audit log) ────────────────
+        // ── 7. Delete any pending reminder jobs (nulls job IDs on entity) ─
+        _reminders.Cancel(appointment);
+
+        // ── 8. Persist — status change + null job IDs in one round-trip ──
         await _uow.SaveChangesAsync(ct);
 
         // ── 8. Send cancellation email ────────────────────────────────────
