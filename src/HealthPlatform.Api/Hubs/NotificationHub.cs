@@ -1,3 +1,4 @@
+using HealthPlatform.Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -8,7 +9,7 @@ namespace HealthPlatform.Api.Hubs;
 /// Requires an authenticated user (JWT Bearer).
 /// Clients join provider-scoped groups to receive targeted broadcasts.
 /// </summary>
-[Authorize]
+[Authorize(Policy = PolicyNames.Patient)]
 public sealed class NotificationHub : Hub
 {
     /// <summary>

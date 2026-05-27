@@ -1,4 +1,5 @@
 using HealthChecks.UI.Client;
+using HealthPlatform.Api.Authorization;
 using HealthPlatform.Api.Hubs;
 using HealthPlatform.Api.Logging;
 using HealthPlatform.Api.Middleware;
@@ -107,7 +108,7 @@ try
             }
         };
     });
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorizationPolicies();
 
     var allowedOrigins = builder.Configuration
         .GetSection("Cors:AllowedOrigins")
