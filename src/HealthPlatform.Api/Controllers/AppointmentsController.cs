@@ -116,6 +116,27 @@ public sealed class AppointmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Returns all appointments for the currently authenticated patient, ordered by
+    /// slot time descending (most recent first).
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — list of patient appointments (may be empty).<br/>
+    /// 401 Unauthorized — user not authenticated.<br/>
+    /// 404 Not Found — patient profile not found.
+    /// </returns>
+    [HttpGet("mine")]
+    [Authorize(Policy = PolicyNames.Patient)]
+    [ProducesResponseType(typeof(IReadOnlyList<PatientAppointmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMine(CancellationToken ct)
+    {
+        var results = await _sender.Send(new GetMyAppointmentsQuery(), ct);
+        return Ok(results);
+    }
+
+    /// <summary>
     /// Registers a walk-in appointment for an existing patient.
     /// Does not consume a pre-booked slot; auto-assigns a queue position.
     /// </summary>
