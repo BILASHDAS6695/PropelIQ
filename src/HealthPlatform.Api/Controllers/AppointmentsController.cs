@@ -254,6 +254,49 @@ public sealed class AppointmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Advances an appointment through the provider-driven status chain:
+    /// Arrived → InProgress → Completed.
+    /// Broadcasts a real-time notification to the provider's dashboard group.
+    /// Staff and Admin only.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="request">Target status string.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — status update confirmation with old and new status.<br/>
+    /// 400 Bad Request — invalid transition (e.g. Scheduled → Completed).<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/status")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(StatusUpdateConfirmationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),              StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),              StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),    StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdateStatus(
+        [FromRoute] Guid               id,
+        [FromBody]  UpdateStatusRequest request,
+        CancellationToken              ct)
+    {
+        var confirmation = await _sender.Send(
+            new UpdateAppointmentStatusCommand(id, request.NewStatus), ct);
+
+        await _hub.Clients
+            .Group($"provider-{confirmation.ProviderId}")
+            .SendAsync(
+                "AppointmentStatusChanged",
+                new AppointmentStatusChangedPayload(
+                    confirmation.AppointmentId,
+                    confirmation.ProviderId,
+                    confirmation.OldStatus,
+                    confirmation.NewStatus),
+                ct);
+
+        return Ok(confirmation);
+    }
+
+    /// <summary>
     /// Cancels an existing appointment.
     /// Patients may only cancel their own appointment and only when more than
     /// 2 hours remain until the start time.  Staff and Admin can cancel any
@@ -383,3 +426,6 @@ public sealed record RescheduleAppointmentRequest(
     Guid    NewSlotId,
     string  Reason,
     string? Note = null);
+
+/// <summary>Payload for updating an appointment status.</summary>
+public sealed record UpdateStatusRequest(string NewStatus);

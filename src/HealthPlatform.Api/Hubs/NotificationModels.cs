@@ -24,3 +24,13 @@ public sealed record PatientArrivedPayload(
     string         PatientFullName,
     DateTimeOffset ArrivalTime,
     bool           IsLateArrival);
+
+/// <summary>
+/// Broadcast to a provider's SignalR group when a provider changes an
+/// appointment status (e.g. Arrived → InProgress → Completed).
+/// </summary>
+public sealed record AppointmentStatusChangedPayload(
+    Guid   AppointmentId,
+    Guid   ProviderId,
+    string OldStatus,
+    string NewStatus);

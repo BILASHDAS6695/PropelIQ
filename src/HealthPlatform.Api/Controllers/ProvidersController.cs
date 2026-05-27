@@ -111,6 +111,47 @@ public sealed class ProvidersController : ControllerBase
         return Ok(queue);
     }
 
+    /// <summary>
+    /// Returns the provider's daily queue with multi-key sort and a summary
+    /// count block for the dashboard header ("N waiting, N in progress, N remaining").
+    /// Default date is today when the <c>date</c> parameter is omitted.
+    /// </summary>
+    /// <param name="id">Provider ID.</param>
+    /// <param name="date">Calendar date in <c>yyyy-MM-dd</c> format (optional, defaults to today).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — sorted queue items and summary counts.<br/>
+    /// 400 Bad Request — date parameter is present but invalid.
+    /// </returns>
+    [HttpGet("{id:guid}/queue/dashboard")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(QueueDashboardDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),    StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetQueueDashboard(
+        Guid               id,
+        [FromQuery] string? date,
+        CancellationToken  ct)
+    {
+        DateOnly parsedDate;
+        if (string.IsNullOrWhiteSpace(date))
+        {
+            parsedDate = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime);
+        }
+        else if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out parsedDate))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title  = "Invalid date format.",
+                Detail = "The 'date' query parameter must be in yyyy-MM-dd format.",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
+        var dashboard = await _sender.Send(
+            new GetProviderQueueDashboardQuery(id, parsedDate), ct);
+        return Ok(dashboard);
+    }
+
     // ─── Schedule Rules ───────────────────────────────────────────────────────
 
     /// <summary>
