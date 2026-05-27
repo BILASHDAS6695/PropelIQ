@@ -2,6 +2,7 @@ using HealthPlatform.Api.Authorization;
 using HealthPlatform.Api.Hubs;
 using HealthPlatform.Application.Features.Appointments;
 using HealthPlatform.Application.Features.SlotSwap;
+using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,13 +20,16 @@ public sealed class AppointmentsController : ControllerBase
 {
     private readonly ISender                      _sender;
     private readonly IHubContext<NotificationHub> _hub;
+    private readonly ICurrentUserService          _currentUser;
 
     public AppointmentsController(
         ISender                      sender,
-        IHubContext<NotificationHub> hub)
+        IHubContext<NotificationHub> hub,
+        ICurrentUserService          currentUser)
     {
-        _sender = sender;
-        _hub    = hub;
+        _sender      = sender;
+        _hub         = hub;
+        _currentUser = currentUser;
     }
 
     /// <summary>
@@ -52,12 +56,63 @@ public sealed class AppointmentsController : ControllerBase
         CancellationToken                 ct)
     {
         var confirmation = await _sender.Send(
-            new BookAppointmentCommand(request.SlotId, request.VisitReason), ct);
+            new BookAppointmentCommand(
+                request.SlotId,
+                request.VisitReason,
+                request.ForceBook,
+                request.OverrideReason), ct);
+
+        // Broadcast to staff when a conflict override was committed.
+        if (request.ForceBook && confirmation.ConflictWarning is not null)
+        {
+            await _hub.Clients
+                .Group("staff-notifications")
+                .SendAsync(
+                    "ConflictOverrideUsed",
+                    new ConflictOverrideUsedPayload(
+                        confirmation.AppointmentId,
+                        Guid.Empty,   // PatientId not in BookingConfirmationDto; staff can look up by AppointmentId
+                        confirmation.ProviderId,
+                        request.OverrideReason ?? string.Empty,
+                        confirmation.ConflictWarning),
+                    ct);
+        }
 
         return CreatedAtAction(
             nameof(Book),
             new { appointmentId = confirmation.AppointmentId },
             confirmation);
+    }
+
+    /// <summary>
+    /// Pre-flight conflict check: returns the worst conflict severity for the
+    /// authenticated patient against the requested slot, without creating a booking.
+    /// UI callers use this to display warnings before the patient confirms.
+    /// </summary>
+    /// <param name="request">The slot the patient intends to book.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — conflict check result with severity "None", "Soft", or "Hard"
+    ///   and conflicting appointment details when applicable.<br/>
+    /// 404 Not Found — slot does not exist.<br/>
+    /// 422 Unprocessable Entity — SlotId missing.
+    /// </returns>
+    [HttpPost("conflict-check")]
+    [Authorize]
+    [ProducesResponseType(typeof(ConflictCheckResultDto),   StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),            StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),  StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ConflictCheck(
+        [FromBody] ConflictCheckRequest request,
+        CancellationToken               ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new CheckAppointmentConflictsQuery(_currentUser.UserId.Value, request.SlotId), ct);
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -402,7 +457,9 @@ public sealed class AppointmentsController : ControllerBase
 /// <summary>Payload for booking an appointment slot.</summary>
 public sealed record BookAppointmentRequest(
     Guid    SlotId,
-    string? VisitReason = null);
+    string? VisitReason    = null,
+    bool    ForceBook      = false,   // patient ack (soft) or staff override (hard)
+    string? OverrideReason = null);   // required when ForceBook = true
 
 /// <summary>Payload for registering a walk-in appointment.</summary>
 public sealed record RegisterWalkInRequest(
@@ -429,3 +486,6 @@ public sealed record RescheduleAppointmentRequest(
 
 /// <summary>Payload for updating an appointment status.</summary>
 public sealed record UpdateStatusRequest(string NewStatus);
+
+/// <summary>Payload for the pre-flight conflict check.</summary>
+public sealed record ConflictCheckRequest(Guid SlotId);
