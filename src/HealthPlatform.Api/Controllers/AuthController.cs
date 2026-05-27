@@ -1,3 +1,4 @@
+using HealthPlatform.Api.Authorization;
 using HealthPlatform.Application.Features.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -62,8 +63,10 @@ public sealed class AuthController : ControllerBase
     /// Authenticates a user and issues a JWT access token + refresh token.
     /// </summary>
     /// <returns>
-    /// 200 OK — token pair with expiresIn.<br/>
-    /// 401 Unauthorized — invalid credentials, inactive, or locked account.<br/>
+    /// 200 OK — token pair with expiresIn; passwordChangeRequired is true when
+    ///           the credential has expired (client must redirect to change-password).<br/>
+    /// 401 Unauthorized — invalid credentials, inactive account, or locked account
+    ///                    (lockoutSecondsRemaining is included when locked).<br/>
     /// 422 Unprocessable Entity — input validation failed.
     /// </returns>
     [HttpPost("login")]
@@ -80,18 +83,27 @@ public sealed class AuthController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return Unauthorized(new ProblemDetails
+            var problem = new ProblemDetails
             {
                 Status = StatusCodes.Status401Unauthorized,
                 Title  = "Authentication failed.",
                 Detail = result.Error
-            });
+            };
+
+            if (result.LockoutSecondsRemaining.HasValue)
+            {
+                problem.Extensions["lockoutSecondsRemaining"] =
+                    result.LockoutSecondsRemaining.Value;
+            }
+
+            return Unauthorized(problem);
         }
 
         return Ok(new AuthTokenResponse(
             result.AccessToken!,
             result.RefreshToken!,
-            result.ExpiresIn));
+            result.ExpiresIn,
+            result.PasswordChangeRequired));
     }
 
     /// <summary>
@@ -157,6 +169,50 @@ public sealed class AuthController : ControllerBase
         await _sender.Send(new LogoutCommand(userId), ct);
         return NoContent();
     }
+
+    /// <summary>
+    /// Changes the authenticated user's password and resets the 90-day expiry clock.
+    /// </summary>
+    /// <returns>
+    /// 204 No Content — password changed successfully.<br/>
+    /// 400 Bad Request — current password incorrect or new password reused from history.<br/>
+    /// 422 Unprocessable Entity — input validation failed.
+    /// </returns>
+    [HttpPost("change-password")]
+    [Authorize(Policy = PolicyNames.Patient)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request,
+        CancellationToken ct)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new ChangePasswordCommand(
+                userId,
+                request.CurrentPassword,
+                request.NewPassword,
+                request.ConfirmNewPassword),
+            ct);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title  = "Password change failed.",
+                Detail = result.Error
+            });
+        }
+
+        return NoContent();
+    }
 }
 
 // ── Request / Response DTOs ──────────────────────────────────────────────────
@@ -184,4 +240,11 @@ public sealed record RefreshRequest(Guid UserId, string RefreshToken);
 public sealed record AuthTokenResponse(
     string AccessToken,
     string RefreshToken,
-    int    ExpiresIn);
+    int    ExpiresIn,
+    bool   PasswordChangeRequired = false);
+
+/// <summary>Payload for POST /api/auth/change-password.</summary>
+public sealed record ChangePasswordRequest(
+    string CurrentPassword,
+    string NewPassword,
+    string ConfirmNewPassword);

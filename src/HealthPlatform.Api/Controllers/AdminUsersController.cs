@@ -43,4 +43,35 @@ public sealed class AdminUsersController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Manually unlocks a locked user account, clearing the failed-attempt counter
+    /// and lockout expiry. This operation is idempotent — unlocking an already-unlocked
+    /// account returns 204 without error.
+    /// </summary>
+    /// <param name="userId">User ID to unlock.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 204 No Content — account unlocked (or was already unlocked).<br/>
+    /// 404 Not Found — user does not exist.
+    /// </returns>
+    [HttpPost("{userId:guid}/unlock")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnlockUser(Guid userId, CancellationToken ct)
+    {
+        var result = await _sender.Send(new UnlockUserCommand(userId), ct);
+
+        if (!result.IsSuccess)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title  = "User not found.",
+                Detail = result.Error
+            });
+        }
+
+        return NoContent();
+    }
 }
