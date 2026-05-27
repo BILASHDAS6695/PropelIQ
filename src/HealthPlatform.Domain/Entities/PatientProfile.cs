@@ -11,6 +11,7 @@ public class PatientProfile : AuditableEntity
     public string? Phone { get; set; }
     public string? InsuranceProviderName { get; set; }
     public string? InsuranceMemberId { get; set; }
+    public int TotalNoShowCount { get; set; }
 
     public User User { get; set; } = null!;
     public ICollection<Appointment> Appointments { get; set; } = [];

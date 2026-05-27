@@ -1,9 +1,13 @@
 using HealthPlatform.Api.Authorization;
+using HealthPlatform.Api.Hubs;
 using HealthPlatform.Application.Features.Appointments;
 using HealthPlatform.Application.Features.SlotSwap;
+using HealthPlatform.Application.Interfaces;
+using HealthPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace HealthPlatform.Api.Controllers;
 
@@ -14,9 +18,19 @@ namespace HealthPlatform.Api.Controllers;
 [Route("api/appointments")]
 public sealed class AppointmentsController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly ISender                      _sender;
+    private readonly IHubContext<NotificationHub> _hub;
+    private readonly ICurrentUserService          _currentUser;
 
-    public AppointmentsController(ISender sender) => _sender = sender;
+    public AppointmentsController(
+        ISender                      sender,
+        IHubContext<NotificationHub> hub,
+        ICurrentUserService          currentUser)
+    {
+        _sender      = sender;
+        _hub         = hub;
+        _currentUser = currentUser;
+    }
 
     /// <summary>
     /// Books an available appointment slot for the authenticated patient.
@@ -42,12 +56,63 @@ public sealed class AppointmentsController : ControllerBase
         CancellationToken                 ct)
     {
         var confirmation = await _sender.Send(
-            new BookAppointmentCommand(request.SlotId, request.VisitReason), ct);
+            new BookAppointmentCommand(
+                request.SlotId,
+                request.VisitReason,
+                request.ForceBook,
+                request.OverrideReason), ct);
+
+        // Broadcast to staff when a conflict override was committed.
+        if (request.ForceBook && confirmation.ConflictWarning is not null)
+        {
+            await _hub.Clients
+                .Group("staff-notifications")
+                .SendAsync(
+                    "ConflictOverrideUsed",
+                    new ConflictOverrideUsedPayload(
+                        confirmation.AppointmentId,
+                        Guid.Empty,   // PatientId not in BookingConfirmationDto; staff can look up by AppointmentId
+                        confirmation.ProviderId,
+                        request.OverrideReason ?? string.Empty,
+                        confirmation.ConflictWarning),
+                    ct);
+        }
 
         return CreatedAtAction(
             nameof(Book),
             new { appointmentId = confirmation.AppointmentId },
             confirmation);
+    }
+
+    /// <summary>
+    /// Pre-flight conflict check: returns the worst conflict severity for the
+    /// authenticated patient against the requested slot, without creating a booking.
+    /// UI callers use this to display warnings before the patient confirms.
+    /// </summary>
+    /// <param name="request">The slot the patient intends to book.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — conflict check result with severity "None", "Soft", or "Hard"
+    ///   and conflicting appointment details when applicable.<br/>
+    /// 404 Not Found — slot does not exist.<br/>
+    /// 422 Unprocessable Entity — SlotId missing.
+    /// </returns>
+    [HttpPost("conflict-check")]
+    [Authorize]
+    [ProducesResponseType(typeof(ConflictCheckResultDto),   StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),            StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),  StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ConflictCheck(
+        [FromBody] ConflictCheckRequest request,
+        CancellationToken               ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new CheckAppointmentConflictsQuery(_currentUser.UserId.Value, request.SlotId), ct);
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -183,12 +248,292 @@ public sealed class AppointmentsController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Searches today's appointments by patient name fragment or exact appointment ID.
+    /// Optionally scoped to one provider.  Front-desk staff use this to locate a
+    /// patient on arrival before marking them as Arrived.
+    /// </summary>
+    /// <param name="providerId">Optional provider filter.</param>
+    /// <param name="patientName">Partial patient name (case-insensitive, min 2 chars).</param>
+    /// <param name="appointmentId">Exact appointment ID filter.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — list of matching appointments for today.<br/>
+    /// 422 Unprocessable Entity — no search filter provided, or name too short.
+    /// </returns>
+    [HttpGet("today")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(IReadOnlyList<TodayAppointmentItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),               StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SearchToday(
+        [FromQuery] Guid?   providerId,
+        [FromQuery] string? patientName,
+        [FromQuery] Guid?   appointmentId,
+        CancellationToken   ct)
+    {
+        var results = await _sender.Send(
+            new TodayAppointmentsSearchQuery(providerId, patientName, appointmentId), ct);
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// Marks a booked appointment as Arrived and broadcasts a real-time
+    /// notification to the provider's dashboard.  Staff and Admin only.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — arrival confirmation including late-arrival flag.<br/>
+    /// 400 Bad Request — appointment status is not Scheduled or Booked.<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/arrive")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(ArrivalConfirmationDto),  StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),           StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Arrive(
+        [FromRoute] Guid  id,
+        CancellationToken ct)
+    {
+        var confirmation = await _sender.Send(new MarkPatientArrivedCommand(id), ct);
+
+        await _hub.Clients
+            .Group($"provider-{confirmation.ProviderId}")
+            .SendAsync(
+                "PatientArrived",
+                new PatientArrivedPayload(
+                    confirmation.AppointmentId,
+                    confirmation.ProviderId,
+                    confirmation.PatientId,
+                    confirmation.PatientFullName,
+                    confirmation.ArrivalTime,
+                    confirmation.IsLateArrival),
+                ct);
+
+        return Ok(confirmation);
+    }
+
+    /// <summary>
+    /// Reverts an accidental patient check-in back to Scheduled status.
+    /// Only succeeds within 5 minutes of the original check-in timestamp.
+    /// Staff and Admin only.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — revert confirmation.<br/>
+    /// 400 Bad Request — appointment is not Arrived, or the 5-minute window has expired.<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/revert-arrival")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(RevertArrivalConfirmationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),               StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),               StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),     StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> RevertArrival(
+        [FromRoute] Guid  id,
+        CancellationToken ct)
+    {
+        var confirmation = await _sender.Send(new RevertArrivalCommand(id), ct);
+        return Ok(confirmation);
+    }
+
+    /// <summary>
+    /// Marks an appointment as NoShow (manual staff action).
+    /// The associated slot is freed immediately and a follow-up email is sent
+    /// to the patient.
+    /// </summary>
+    /// <param name="id">Appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — NoShow confirmed with updated patient no-show count.<br/>
+    /// 400 Bad Request — appointment is not in Scheduled or Booked state.<br/>
+    /// 401 Unauthorized — caller is not authenticated.<br/>
+    /// 403 Forbidden — caller does not have Staff or Admin role.<br/>
+    /// 404 Not Found — appointment does not exist.
+    /// </returns>
+    [HttpPost("{id:guid}/no-show")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(NoShowConfirmationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),         StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),         StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkNoShow(
+        [FromRoute] Guid  id,
+        CancellationToken ct)
+    {
+        var result = await _sender.Send(new MarkNoShowCommand(id, IsAutomatic: false), ct);
+
+        await _hub.Clients
+            .Group($"provider-{result.ProviderId}")
+            .SendAsync("AppointmentNoShow", new AppointmentNoShowPayload(
+                AppointmentId:           result.AppointmentId,
+                ProviderId:              result.ProviderId,
+                PatientId:               result.PatientId,
+                SlotTime:                result.SlotTime,
+                IsAutomatic:             false,
+                PatientTotalNoShowCount: result.PatientTotalNoShowCount), ct);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Advances an appointment through the provider-driven status chain:
+    /// Arrived → InProgress → Completed.
+    /// Broadcasts a real-time notification to the provider's dashboard group.
+    /// Staff and Admin only.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="request">Target status string.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — status update confirmation with old and new status.<br/>
+    /// 400 Bad Request — invalid transition (e.g. Scheduled → Completed).<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/status")]
+    [Authorize(Policy = PolicyNames.Staff)]
+    [ProducesResponseType(typeof(StatusUpdateConfirmationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),              StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),              StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),    StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdateStatus(
+        [FromRoute] Guid               id,
+        [FromBody]  UpdateStatusRequest request,
+        CancellationToken              ct)
+    {
+        var confirmation = await _sender.Send(
+            new UpdateAppointmentStatusCommand(id, request.NewStatus), ct);
+
+        await _hub.Clients
+            .Group($"provider-{confirmation.ProviderId}")
+            .SendAsync(
+                "AppointmentStatusChanged",
+                new AppointmentStatusChangedPayload(
+                    confirmation.AppointmentId,
+                    confirmation.ProviderId,
+                    confirmation.OldStatus,
+                    confirmation.NewStatus),
+                ct);
+
+        return Ok(confirmation);
+    }
+
+    /// <summary>
+    /// Cancels an existing appointment.
+    /// Patients may only cancel their own appointment and only when more than
+    /// 2 hours remain until the start time.  Staff and Admin can cancel any
+    /// appointment regardless of the time remaining.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="request">Cancellation reason and optional note.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — cancellation confirmation.<br/>
+    /// 400 Bad Request — appointment already Arrived/Completed, or &lt; 2 h window (patient).<br/>
+    /// 403 Forbidden — patient trying to cancel another patient's appointment.<br/>
+    /// 404 Not Found — appointment does not exist.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/cancel")]
+    [Authorize]
+    [ProducesResponseType(typeof(CancellationConfirmationDto),  StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),      StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Cancel(
+        [FromRoute] Guid                    id,
+        [FromBody]  CancelAppointmentRequest request,
+        CancellationToken                   ct)
+    {
+        if (!Enum.TryParse<CancellationReason>(request.Reason, ignoreCase: true, out var reason))
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title  = "Bad Request",
+                Detail = $"'{request.Reason}' is not a valid cancellation reason. " +
+                         "Allowed values: ScheduleConflict, FeelingBetter, Other."
+            });
+
+        var confirmation = await _sender.Send(
+            new CancelAppointmentCommand(
+                id,
+                reason,
+                request.Note,
+                CallerIsStaff: User.IsInRole(nameof(UserRole.Staff))
+                            || User.IsInRole(nameof(UserRole.Admin))), ct);
+
+        return Ok(confirmation);
+    }
+
+    /// <summary>
+    /// Reschedules an existing appointment: cancels the current booking and
+    /// creates a new one on the requested slot in a single atomic operation.
+    /// The original visit reason is preserved.  If the new slot is unavailable
+    /// the current appointment is not cancelled (409 Conflict returned instead).
+    /// </summary>
+    /// <param name="id">The appointment ID to reschedule.</param>
+    /// <param name="request">New slot ID, cancellation reason, and optional note.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 201 Created — reschedule confirmation with new appointment ID and time.<br/>
+    /// 400 Bad Request — appointment already Arrived/Completed, or &lt; 2 h window (patient).<br/>
+    /// 403 Forbidden — patient trying to reschedule another patient's appointment.<br/>
+    /// 404 Not Found — appointment or new slot does not exist.<br/>
+    /// 409 Conflict — new slot is no longer available; existing appointment unchanged.<br/>
+    /// 422 Unprocessable Entity — validation failed.
+    /// </returns>
+    [HttpPost("{id:guid}/reschedule")]
+    [Authorize]
+    [ProducesResponseType(typeof(RescheduleConfirmationDto),    StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails),                StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),      StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Reschedule(
+        [FromRoute] Guid                        id,
+        [FromBody]  RescheduleAppointmentRequest request,
+        CancellationToken                       ct)
+    {
+        if (!Enum.TryParse<CancellationReason>(request.Reason, ignoreCase: true, out var reason))
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title  = "Bad Request",
+                Detail = $"'{request.Reason}' is not a valid cancellation reason. " +
+                         "Allowed values: ScheduleConflict, FeelingBetter, Other."
+            });
+
+        var confirmation = await _sender.Send(
+            new RescheduleAppointmentCommand(
+                id,
+                request.NewSlotId,
+                reason,
+                request.Note,
+                CallerIsStaff: User.IsInRole(nameof(UserRole.Staff))
+                            || User.IsInRole(nameof(UserRole.Admin))), ct);
+
+        return CreatedAtAction(
+            nameof(Reschedule),
+            new { appointmentId = confirmation.NewAppointmentId },
+            confirmation);
+    }
 }
 
 /// <summary>Payload for booking an appointment slot.</summary>
 public sealed record BookAppointmentRequest(
     Guid    SlotId,
-    string? VisitReason = null);
+    string? VisitReason    = null,
+    bool    ForceBook      = false,   // patient ack (soft) or staff override (hard)
+    string? OverrideReason = null);   // required when ForceBook = true
 
 /// <summary>Payload for registering a walk-in appointment.</summary>
 public sealed record RegisterWalkInRequest(
@@ -204,3 +549,21 @@ public sealed record CancelSwapRequest(string? Reason = null);
 
 /// <summary>Request body for responding to a slot swap offer.</summary>
 public sealed record RespondToSwapRequest(bool Accept, string? Reason = null);
+
+/// <summary>Payload for cancelling an appointment.</summary>
+public sealed record CancelAppointmentRequest(
+    string  Reason,
+    string? Note = null);
+
+/// <summary>Payload for rescheduling an appointment.</summary>
+public sealed record RescheduleAppointmentRequest(
+    Guid    NewSlotId,
+    string  Reason,
+    string? Note = null);
+
+/// <summary>Payload for updating an appointment status.</summary>
+public sealed record UpdateStatusRequest(string NewStatus);
+
+/// <summary>Payload for the pre-flight conflict check.</summary>
+public sealed record ConflictCheckRequest(Guid SlotId);
+>>>>>>> origin/main

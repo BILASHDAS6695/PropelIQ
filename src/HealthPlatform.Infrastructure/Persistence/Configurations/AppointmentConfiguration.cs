@@ -16,6 +16,16 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
 
         builder.Property(a => a.VisitReason).HasMaxLength(500);
 
+        // Store enum as string so the DB column is human-readable.
+        builder.Property(a => a.CancellationReason)
+            .HasConversion<string>()
+            .HasMaxLength(30);
+
+        builder.Property(a => a.CancellationNote).HasMaxLength(500);
+
+        builder.Property(a => a.ConflictOverrideReason).HasMaxLength(500);
+        // IsConflictOverride is a non-nullable bool; EF maps to boolean column (default false).
+
         builder.HasIndex(a => a.PatientId);
         builder.HasIndex(a => a.ProviderId);
 

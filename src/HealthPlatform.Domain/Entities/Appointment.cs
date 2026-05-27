@@ -16,6 +16,18 @@ public class Appointment : AuditableEntity
     public int?   QueuePosition   { get; set; }    // walk-in queue order
     public DateTimeOffset? ArrivalTime { get; set; }  // auto-set at registration
 
+    // ── Cancellation ──────────────────────────────────────────────────────
+    /// <summary>Populated when Status is Cancelled or when rescheduled.</summary>
+    public CancellationReason? CancellationReason { get; set; }
+    /// <summary>Optional free-text note; required by the UI when Reason = Other.</summary>
+    public string? CancellationNote { get; set; }
+
+    // ── Conflict override ─────────────────────────────────────────────────
+    /// <summary>True when a staff member force-booked despite a hard conflict.</summary>
+    public bool    IsConflictOverride     { get; set; }
+    /// <summary>Mandatory justification supplied by staff when IsConflictOverride is true.</summary>
+    public string? ConflictOverrideReason { get; set; }
+
     public PatientProfile   Patient  { get; set; } = null!;
     public Provider         Provider { get; set; } = null!;
     public AppointmentSlot? Slot     { get; set; }     // null for walk-ins

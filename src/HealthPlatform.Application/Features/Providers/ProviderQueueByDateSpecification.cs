@@ -27,11 +27,13 @@ internal sealed class ProviderQueueByDateSpecification : ISpecification<Appointm
         a => a.ProviderId == _providerId
           && (a.Status == AppointmentStatus.Scheduled
            || a.Status == AppointmentStatus.WalkIn
-           || a.Status == AppointmentStatus.Booked)
+           || a.Status == AppointmentStatus.Booked
+           || a.Status == AppointmentStatus.Arrived
+           || a.Status == AppointmentStatus.InProgress)
           && a.SlotTime >= _dayStart
           && a.SlotTime <= _dayEnd;
 
-    public List<Expression<Func<Appointment, object>>> Includes           => [];
+    public List<Expression<Func<Appointment, object>>> Includes => [a => a.Patient];
     public Expression<Func<Appointment, object>>?      OrderBy           => a => a.SlotTime;
     public Expression<Func<Appointment, object>>?      OrderByDescending => null;
     public bool IsPagingEnabled => false;

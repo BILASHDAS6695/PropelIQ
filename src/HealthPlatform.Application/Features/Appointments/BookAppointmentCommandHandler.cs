@@ -59,16 +59,44 @@ internal sealed class BookAppointmentCommandHandler
         if (slot.Status != SlotStatus.Available)
             throw new ConflictException("This slot is no longer available.");
 
-        // ── 3. Duplicate-booking guard ─────────────────────────────────────
-        var slotDate  = DateOnly.FromDateTime(slot.StartTime.UtcDateTime);
-        var duplicates = await _uow.Repository<Appointment>()
-            .GetAsync(
-                new ActiveAppointmentByPatientProviderDateSpecification(
-                    patient.Id, slot.ProviderId, slotDate), ct);
+        // ── 3. Cross-provider conflict detection (fail fast, before slot lock) ───
+        const int HardWindowMinutes = 30;
+        var proposedDate = DateOnly.FromDateTime(slot.StartTime.UtcDateTime);
 
-        if (duplicates.Count > 0)
-            throw new ConflictException(
-                "You already have an active appointment with this provider on the requested date.");
+        var sameDayAppointments = await _uow.Repository<Appointment>()
+            .GetAsync(
+                new PatientActiveSameDayAppointmentsSpecification(patient.Id, proposedDate),
+                ct);
+
+        string? conflictWarning = null;
+
+        if (sameDayAppointments.Count > 0)
+        {
+            var hardConflict = sameDayAppointments.FirstOrDefault(
+                a => Math.Abs((a.SlotTime - slot.StartTime).TotalMinutes) < HardWindowMinutes);
+
+            if (hardConflict is not null)
+            {
+                if (!command.ForceBook)
+                    throw new ConflictException(
+                        $"Appointment conflict: you have an overlapping appointment with " +
+                        $"{hardConflict.Provider.Name} at {hardConflict.SlotTime:t} UTC " +
+                        $"(ID: {hardConflict.Id}). Staff can override with ForceBook = true.");
+
+                // Staff override: warning captured in DTO + persisted on entity
+                conflictWarning =
+                    $"Override: conflicting appointment {hardConflict.Id} with " +
+                    $"{hardConflict.Provider.Name} at {hardConflict.SlotTime:t} UTC.";
+            }
+            else
+            {
+                // Soft conflict — same day but outside 30-min window
+                var softConflict = sameDayAppointments[0];
+                conflictWarning =
+                    $"Note: you have another appointment with {softConflict.Provider.Name} at " +
+                    $"{softConflict.SlotTime:t} UTC on the same day.";
+            }
+        }
 
         // ── 4. Load provider for confirmation DTO ──────────────────────────
         var provider = await _uow.Repository<Provider>()
@@ -78,14 +106,16 @@ internal sealed class BookAppointmentCommandHandler
         // ── 5. Create appointment + mark slot Booked ───────────────────────
         var appointment = new Appointment
         {
-            Id          = Guid.NewGuid(),
-            PatientId   = patient.Id,
-            ProviderId  = slot.ProviderId,
-            SlotId      = slot.Id,
-            SlotTime    = slot.StartTime,
-            Status      = AppointmentStatus.Scheduled,
-            VisitReason = command.VisitReason,
-            IsWalkIn    = false
+            Id                     = Guid.NewGuid(),
+            PatientId              = patient.Id,
+            ProviderId             = slot.ProviderId,
+            SlotId                 = slot.Id,
+            SlotTime               = slot.StartTime,
+            Status                 = AppointmentStatus.Scheduled,
+            VisitReason            = command.VisitReason,
+            IsWalkIn               = false,
+            IsConflictOverride     = command.ForceBook && conflictWarning is not null,
+            ConflictOverrideReason = command.OverrideReason
         };
 
         slot.Status = SlotStatus.Booked;
@@ -119,6 +149,7 @@ internal sealed class BookAppointmentCommandHandler
             provider.Id,
             provider.Name,
             appointment.SlotTime,
-            appointment.Status.ToString());
+            appointment.Status.ToString(),
+            conflictWarning);
     }
 }

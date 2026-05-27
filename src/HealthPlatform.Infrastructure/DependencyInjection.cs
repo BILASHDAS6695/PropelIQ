@@ -1,6 +1,9 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Application.Settings;
 using HealthPlatform.Infrastructure.Cache;
+using HealthPlatform.Infrastructure.Jobs;
 using HealthPlatform.Infrastructure.Messaging;
 using HealthPlatform.Infrastructure.Persistence;
 using HealthPlatform.Infrastructure.Persistence.Interceptors;
@@ -56,6 +59,17 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, NoOpEmailSender>();
         services.AddHostedService<SlotGenerationService>();
         services.AddHostedService<SwapRequestExpiryService>();
+
+        services.AddHangfire(config =>
+            config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(c =>
+                    c.UseNpgsqlConnection(
+                        configuration.GetConnectionString("DefaultConnection")!)));
+
+        services.AddTransient<NoShowAutoMarkJob>();
 
         services.Configure<AccountSecuritySettings>(
             configuration.GetSection(AccountSecuritySettings.SectionName));

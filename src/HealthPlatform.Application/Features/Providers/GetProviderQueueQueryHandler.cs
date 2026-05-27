@@ -22,11 +22,14 @@ internal sealed class GetProviderQueueQueryHandler
             .Select(a => new QueueEntryDto(
                 a.Id,
                 a.PatientId,
+                $"{a.Patient.FirstName} {a.Patient.LastName}",
                 a.Status.ToString(),
                 a.IsWalkIn ? (a.ArrivalTime ?? a.SlotTime) : a.SlotTime,
                 a.QueuePosition,
                 a.VisitReason,
-                a.IsWalkIn))
+                a.IsWalkIn,
+                a.ArrivalTime,
+                a.ArrivalTime.HasValue && a.ArrivalTime.Value > a.SlotTime.AddMinutes(15)))
             .ToList();
     }
 }
