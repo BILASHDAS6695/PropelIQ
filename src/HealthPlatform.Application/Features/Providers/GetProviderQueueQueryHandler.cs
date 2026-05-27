@@ -26,7 +26,9 @@ internal sealed class GetProviderQueueQueryHandler
                 a.IsWalkIn ? (a.ArrivalTime ?? a.SlotTime) : a.SlotTime,
                 a.QueuePosition,
                 a.VisitReason,
-                a.IsWalkIn))
+                a.IsWalkIn,
+                a.ArrivalTime,
+                a.ArrivalTime.HasValue && a.ArrivalTime.Value > a.SlotTime.AddMinutes(15)))
             .ToList();
     }
 }
