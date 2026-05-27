@@ -8,6 +8,8 @@ public class Provider : AuditableEntity
     public string? Specialty { get; set; }
     public Guid? ScheduleTemplateId { get; set; }
 
-    public ICollection<AppointmentSlot> AppointmentSlots { get; set; } = [];
-    public ICollection<Appointment> Appointments { get; set; } = [];
+    public ICollection<AppointmentSlot>        AppointmentSlots  { get; set; } = [];
+    public ICollection<Appointment>            Appointments      { get; set; } = [];
+    public ICollection<ProviderScheduleRule>   ScheduleRules     { get; set; } = [];
+    public ICollection<ProviderUnavailability> Unavailabilities  { get; set; } = [];
 }

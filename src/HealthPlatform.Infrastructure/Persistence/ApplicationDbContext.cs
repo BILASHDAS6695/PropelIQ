@@ -29,6 +29,8 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<InsuranceRecord> InsuranceRecords => Set<InsuranceRecord>();
+    public DbSet<ProviderScheduleRule>   ProviderScheduleRules   => Set<ProviderScheduleRule>();
+    public DbSet<ProviderUnavailability> ProviderUnavailabilities => Set<ProviderUnavailability>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

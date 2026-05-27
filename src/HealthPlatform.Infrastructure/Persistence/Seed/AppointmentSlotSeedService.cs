@@ -1,4 +1,5 @@
 using HealthPlatform.Domain.Entities;
+using HealthPlatform.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -74,11 +75,11 @@ internal sealed class AppointmentSlotSeedService : BackgroundService
 
                         slots.Add(new AppointmentSlot
                         {
-                            Id          = Guid.NewGuid(),
+                            Id         = Guid.NewGuid(),
                             ProviderId  = providerId,
                             StartTime   = start,
                             EndTime     = start.AddMinutes(30),
-                            IsAvailable = true
+                            Status      = SlotStatus.Available
                         });
                     }
                 }

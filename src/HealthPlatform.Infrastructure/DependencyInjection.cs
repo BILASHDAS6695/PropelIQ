@@ -47,7 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, NoOpEmailSender>();
-        services.AddHostedService<AppointmentSlotSeedService>();
+        services.AddHostedService<SlotGenerationService>();
 
         services.Configure<AccountSecuritySettings>(
             configuration.GetSection(AccountSecuritySettings.SectionName));

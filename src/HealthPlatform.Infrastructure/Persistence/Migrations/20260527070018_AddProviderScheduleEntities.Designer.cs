@@ -4,6 +4,7 @@ using System.Text.Json;
 using HealthPlatform.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HealthPlatform.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527070018_AddProviderScheduleEntities")]
+    partial class AddProviderScheduleEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1341,10 +1344,6 @@ namespace HealthPlatform.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("created_by");
 
-                    b.Property<DateTimeOffset?>("CredentialExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("credential_expires_at");
-
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
@@ -1359,12 +1358,6 @@ namespace HealthPlatform.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("email");
 
-                    b.Property<int>("FailedLoginAttempts")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("failed_login_attempts");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -1377,20 +1370,11 @@ namespace HealthPlatform.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_login_at");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("lockout_end");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)")
                         .HasColumnName("password_hash");
-
-                    b.Property<string>("PasswordHistory")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("password_history");
 
                     b.Property<string>("Role")
                         .IsRequired()
