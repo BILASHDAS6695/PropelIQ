@@ -8,6 +8,7 @@ public sealed record GetProviderQueueQuery(Guid ProviderId, DateOnly Date)
 public sealed record QueueEntryDto(
     Guid            AppointmentId,
     Guid            PatientId,
+    string          PatientFullName,
     string          Status,
     DateTimeOffset  AppointmentTime,
     int?            QueuePosition,

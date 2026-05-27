@@ -22,6 +22,7 @@ internal sealed class GetProviderQueueQueryHandler
             .Select(a => new QueueEntryDto(
                 a.Id,
                 a.PatientId,
+                $"{a.Patient.FirstName} {a.Patient.LastName}",
                 a.Status.ToString(),
                 a.IsWalkIn ? (a.ArrivalTime ?? a.SlotTime) : a.SlotTime,
                 a.QueuePosition,
