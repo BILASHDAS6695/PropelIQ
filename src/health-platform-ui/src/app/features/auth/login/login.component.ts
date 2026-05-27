@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
@@ -95,6 +96,10 @@ import { AuthService } from '../../../core/auth/auth.service';
           </p-button>
         </form>
 
+        <div class="text-center mt-2">
+          <a routerLink="/forgot-password" class="text-sm text-primary">Forgot password?</a>
+        </div>
+
         <p class="text-center mt-3 text-sm">
           Don't have an account?
           <a routerLink="/register" class="text-primary font-medium">Create one</a>
@@ -116,6 +121,7 @@ export class LoginComponent implements OnInit {
 
   loading = false;
   serverError = '';
+  lockoutSeconds: number | null = null;
   registered = false;
   sessionExpired = false;
 
@@ -134,18 +140,38 @@ export class LoginComponent implements OnInit {
 
     this.loading = true;
     this.serverError = '';
+    this.lockoutSeconds = null;
 
     const { email, password } = this.form.value;
 
     this.auth.login(email, password).subscribe({
-      next: () => {
+      next: (result) => {
         this.loading = false;
-        this.router.navigate(['/dashboard']);
+        if (result.passwordChangeRequired) {
+          this.router.navigate(['/change-password']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.loading = false;
-        this.serverError = err?.error?.detail ?? 'Sign in failed. Please check your credentials.';
+        const lockoutSecs = err.error?.lockoutSecondsRemaining as number | undefined;
+        if (lockoutSecs != null && lockoutSecs > 0) {
+          this.lockoutSeconds = lockoutSecs;
+          this.serverError = this.formatLockout(lockoutSecs);
+        } else {
+          this.serverError =
+            err?.error?.detail ?? 'Sign in failed. Please check your credentials.';
+        }
       },
     });
+  }
+
+  private formatLockout(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0
+      ? `Account is locked. Try again in ${m} min ${s} sec.`
+      : `Account is locked. Try again in ${s} seconds.`;
   }
 }

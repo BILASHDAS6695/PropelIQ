@@ -1,12 +1,14 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AppHeaderComponent } from './header/app-header.component';
 import { AppSidebarComponent } from './sidebar/app-sidebar.component';
+import { InactivityTimerService } from '../core/services/inactivity-timer.service';
+import { InactivityWarningComponent } from '../shared/components/inactivity-warning/inactivity-warning.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, AppHeaderComponent, AppSidebarComponent],
+  imports: [RouterOutlet, AppHeaderComponent, AppSidebarComponent, InactivityWarningComponent],
   template: `
     <div class="app-layout" [class.sidebar-collapsed]="sidebarCollapsed()">
       <app-sidebar
@@ -20,6 +22,7 @@ import { AppSidebarComponent } from './sidebar/app-sidebar.component';
         </main>
       </div>
     </div>
+    <app-inactivity-warning />
   `,
   styles: [
     `
@@ -44,6 +47,15 @@ import { AppSidebarComponent } from './sidebar/app-sidebar.component';
     `,
   ],
 })
-export class AppLayoutComponent {
-  sidebarCollapsed = signal(false);
+export class AppLayoutComponent implements OnInit, OnDestroy {
+  protected readonly sidebarCollapsed = signal(false);
+  private readonly inactivity = inject(InactivityTimerService);
+
+  ngOnInit(): void {
+    this.inactivity.start();
+  }
+
+  ngOnDestroy(): void {
+    this.inactivity.stop();
+  }
 }
