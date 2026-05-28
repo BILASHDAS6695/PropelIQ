@@ -36,6 +36,7 @@ export interface NerEntity {
   endOffset: number;
   confidenceScore: number;
   lowConfidence: boolean;
+  pageNumber: number; // 1-based; 0 = unknown page (pre-US-048 data)
 }
 
 export interface DocumentOcrResultDto {

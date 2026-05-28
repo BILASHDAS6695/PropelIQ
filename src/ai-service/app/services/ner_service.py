@@ -71,7 +71,7 @@ class NerService:
         """
         results: list[dict] = []
 
-        for page_text in pages:
+        for page_index, page_text in enumerate(pages):
             if not page_text or not page_text.strip():
                 continue
 
@@ -82,6 +82,7 @@ class NerService:
                 for ent in entities:
                     ent["start_offset"] += char_offset
                     ent["end_offset"]   += char_offset
+                    ent["page_number"]  = page_index + 1   # 1-based, matches OcrPageResult.pageNumber
                 results.extend(entities)
                 char_offset += len(chunk)
 

@@ -72,7 +72,8 @@ internal sealed class AiServiceNerClient : INerClient
                 e.StartOffset,
                 e.EndOffset,
                 e.ConfidenceScore,
-                e.LowConfidence))
+                e.LowConfidence,
+                e.PageNumber))
             .ToList();
     }
 
@@ -88,6 +89,7 @@ internal sealed class AiServiceNerClient : INerClient
         [property: JsonPropertyName("start_offset")]     int    StartOffset,
         [property: JsonPropertyName("end_offset")]       int    EndOffset,
         [property: JsonPropertyName("confidence_score")] double ConfidenceScore,
-        [property: JsonPropertyName("low_confidence")]   bool   LowConfidence
+        [property: JsonPropertyName("low_confidence")]   bool   LowConfidence,
+        [property: JsonPropertyName("page_number")]      int    PageNumber
     );
 }

@@ -76,6 +76,7 @@ class EntitySpan(BaseModel):
     low_confidence: bool = Field(
         description="True when confidence_score < the request threshold."
     )
+    page_number: int = Field(description="1-based page index within the document.")
 
 
 class NerResponse(BaseModel):
