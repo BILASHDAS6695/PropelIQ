@@ -115,6 +115,12 @@ public static class DependencyInjection
             configuration.GetSection(DocumentStorageSettings.SectionName));
         services.AddScoped<IDocumentStorageService, LocalDocumentStorageService>();
 
+        services.Configure<TesseractSettings>(
+            configuration.GetSection(TesseractSettings.SectionName));
+        services.AddScoped<IOcrService, TesseractOcrService>();
+        services.AddTransient<DocumentOcrJob>();
+        services.AddScoped<IOcrJobScheduler, HangfireOcrJobScheduler>();
+
         return services;
     }
 }

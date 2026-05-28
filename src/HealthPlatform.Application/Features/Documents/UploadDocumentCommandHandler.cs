@@ -15,18 +15,21 @@ internal sealed class UploadDocumentCommandHandler
     private readonly IUnitOfWork _uow;
     private readonly IDocumentStorageService _storage;
     private readonly ICurrentUserService _currentUser;
+    private readonly IOcrJobScheduler _ocrScheduler;
     private readonly ILogger<UploadDocumentCommandHandler> _logger;
 
     public UploadDocumentCommandHandler(
         IUnitOfWork uow,
         IDocumentStorageService storage,
         ICurrentUserService currentUser,
+        IOcrJobScheduler ocrScheduler,
         ILogger<UploadDocumentCommandHandler> logger)
     {
-        _uow = uow;
-        _storage = storage;
-        _currentUser = currentUser;
-        _logger = logger;
+        _uow          = uow;
+        _storage      = storage;
+        _currentUser  = currentUser;
+        _ocrScheduler = ocrScheduler;
+        _logger       = logger;
     }
 
     public async Task<DocumentUploadResultDto> Handle(
@@ -90,6 +93,9 @@ internal sealed class UploadDocumentCommandHandler
             await _uow.Repository<AuditLog>().AddAsync(auditEntry, ct);
 
             await _uow.SaveChangesAsync(ct);
+
+            // Enqueue OCR job (fire-and-forget) — runs outside this HTTP request
+            _ocrScheduler.Enqueue(document.Id);
         }
         catch (Exception ex)
         {

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { FileUploadModule } from 'primeng/fileupload';
@@ -35,6 +36,7 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
     ButtonModule,
     SkeletonModule,
     ToastModule,
+    RouterLink,
   ],
   providers: [MessageService],
   template: `
@@ -99,6 +101,7 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
               <th scope="col">Size</th>
               <th scope="col">Uploaded</th>
               <th scope="col">Status</th>
+              <th scope="col" style="width: 5rem">Actions</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-doc>
@@ -116,6 +119,15 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
                 <p-tag
                   [value]="doc.processingStatus"
                   [severity]="statusSeverity(doc.processingStatus)"
+                />
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-search"
+                  [text]="true"
+                  size="small"
+                  pTooltip="View OCR result"
+                  [routerLink]="['documents', doc.documentId]"
                 />
               </td>
             </tr>

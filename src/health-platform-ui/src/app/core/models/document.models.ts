@@ -22,3 +22,17 @@ export type DocumentProcessingStatus =
   | 'Processed'
   | 'Verified'
   | 'Failed';
+
+export interface OcrPageResult {
+  pageNumber: number;
+  text: string;
+  confidenceScore: number;
+}
+
+export interface DocumentOcrResultDto {
+  documentId: string;
+  fileName: string;
+  processingStatus: DocumentProcessingStatus;
+  ocrConfidenceScore: number | null;
+  pages: OcrPageResult[];
+}

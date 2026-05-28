@@ -19,6 +19,19 @@ public class ClinicalDocument : AuditableEntity
     /// </summary>
     public string EncryptionIv { get; set; } = string.Empty;
 
+    /// <summary>
+    /// JSON array of OcrPageResult objects: [{ pageNumber, text, confidenceScore }].
+    /// Null until OCR job completes successfully.
+    /// Stored as a PostgreSQL JSONB column for efficient querying.
+    /// </summary>
+    public string? ExtractedText { get; set; }
+
+    /// <summary>
+    /// Average OCR confidence score across all pages (0.0–100.0).
+    /// Null until OCR job completes successfully.
+    /// </summary>
+    public double? OcrConfidenceScore { get; set; }
+
     public PatientProfile Patient { get; set; } = null!;
     public ICollection<ExtractedData> ExtractedData { get; set; } = [];
 }
