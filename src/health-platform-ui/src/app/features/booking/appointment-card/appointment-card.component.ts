@@ -36,6 +36,22 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contr
             [value]="statusLabel(appointment.status)"
             [severity]="statusSeverity(appointment.status)"
           />
+          @if (appointment.intakeStatus !== undefined) {
+            <p-tag
+              [value]="intakeStatusLabel(appointment.intakeStatus)"
+              [severity]="intakeStatusSeverity(appointment.intakeStatus)"
+            />
+          }
+          @if (showIntakeButton && canCompleteIntake) {
+            <p-button
+              label="Complete Intake"
+              severity="warn"
+              size="small"
+              icon="pi pi-file-edit"
+              [outlined]="true"
+              (onClick)="intakeRequest.emit(appointment)"
+            />
+          }
           @if (showCancel) {
             <p-button
               label="Cancel"
@@ -92,12 +108,23 @@ export class AppointmentCardComponent {
   @Input() showAddToCalendar = false;
   @Input() showSwap = false;
   @Input() showSwapHistory = false;
+  @Input() showIntakeButton = false;
 
   @Output() cancelRequest = new EventEmitter<AppointmentItemDto>();
   @Output() rescheduleRequest = new EventEmitter<AppointmentItemDto>();
   @Output() swapRequest = new EventEmitter<AppointmentItemDto>();
+  @Output() intakeRequest = new EventEmitter<AppointmentItemDto>();
 
   private readonly ics = inject(IcsService);
+
+  get canCompleteIntake(): boolean {
+    const upcomingStatuses: string[] = [AppointmentStatus.Scheduled, AppointmentStatus.Booked];
+    return (
+      upcomingStatuses.includes(this.appointment.status) &&
+      (this.appointment.intakeStatus === null || this.appointment.intakeStatus === 'Draft') &&
+      this.appointment.isIntakeWindowOpen === true
+    );
+  }
 
   downloadIcs(appt: AppointmentItemDto): void {
     const content = this.ics.buildSingle(appt);
@@ -130,5 +157,25 @@ export class AppointmentCardComponent {
       WalkIn: 'contrast',
     };
     return map[status] ?? 'secondary';
+  }
+
+  intakeStatusLabel(status: string | null): string {
+    const labels: Record<string, string> = {
+      Draft: 'Intake Draft',
+      Completed: 'Intake Completed',
+      ReviewedByProvider: 'Intake Reviewed',
+      Orphaned: 'Intake Orphaned',
+    };
+    return status ? (labels[status] ?? status) : 'Intake Not Started';
+  }
+
+  intakeStatusSeverity(status: string | null): TagSeverity {
+    const map: Record<string, TagSeverity> = {
+      Draft: 'warn',
+      Completed: 'success',
+      ReviewedByProvider: 'info',
+      Orphaned: 'danger',
+    };
+    return status ? (map[status] ?? 'secondary') : 'warn';
   }
 }

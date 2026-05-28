@@ -30,6 +30,20 @@ export interface AppointmentItemDto {
   status: AppointmentStatus;
   visitReason: string | null;
   patientName: string;
+  intakeStatus: string | null;
+  isIntakeWindowOpen: boolean;
+}
+
+export interface StaffAppointmentItemDto {
+  appointmentId: string;
+  patientId: string;
+  patientFullName: string;
+  status: string;
+  slotTime: string;
+  isWalkIn: boolean;
+  isLateArrival: boolean;
+  arrivalTime: string | null;
+  intakeStatus: string | null;
 }
 
 export enum AppointmentStatus {

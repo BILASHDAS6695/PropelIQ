@@ -12,6 +12,8 @@ const BASE_APPT: AppointmentItemDto = {
   status: AppointmentStatus.Scheduled,
   visitReason: 'Annual checkup', // must NOT appear in ICS output
   patientName: 'Jane Doe',
+  intakeStatus: null,
+  isIntakeWindowOpen: false,
 };
 
 describe('IcsService', () => {
