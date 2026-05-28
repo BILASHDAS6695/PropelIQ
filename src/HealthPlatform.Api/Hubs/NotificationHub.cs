@@ -1,17 +1,42 @@
 using HealthPlatform.Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace HealthPlatform.Api.Hubs;
 
 /// <summary>
-/// Real-time notification hub for slot availability and queue status events.
+/// Real-time notification hub for slot availability, queue status, and in-app notification events.
 /// Requires an authenticated user (JWT Bearer).
-/// Clients join provider-scoped groups to receive targeted broadcasts.
+/// On connection each user is automatically joined to their personal <c>user-{userId}</c> group.
 /// </summary>
-[Authorize(Policy = PolicyNames.Patient)]
+[Authorize]
 public sealed class NotificationHub : Hub
 {
+    /// <summary>Returns the SignalR group name for the given user's personal channel.</summary>
+    public static string UserGroup(Guid userId) => $"user-{userId}";
+
+    /// <inheritdoc />
+    public override async Task OnConnectedAsync()
+    {
+        var raw = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (raw is not null && Guid.TryParse(raw, out var userId))
+            await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
+
+        await base.OnConnectedAsync();
+    }
+
+    /// <inheritdoc />
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var raw = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (raw is not null && Guid.TryParse(raw, out var userId))
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, UserGroup(userId));
+
+        await base.OnDisconnectedAsync(exception);
+    }
+
+
     /// <summary>
     /// Subscribes the calling connection to a provider-scoped group so that
     /// subsequent broadcasts to that group are delivered to this client.

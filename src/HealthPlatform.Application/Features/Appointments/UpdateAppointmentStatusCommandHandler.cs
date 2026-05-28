@@ -31,9 +31,14 @@ internal sealed class UpdateAppointmentStatusCommandHandler
             [AppointmentStatus.NoShow]     = AppointmentStatus.Arrived,   // staff override for late arrivals
         };
 
-    private readonly IUnitOfWork _uow;
+    private readonly IUnitOfWork       _uow;
+    private readonly IInAppNotifier    _inAppNotifier;
 
-    public UpdateAppointmentStatusCommandHandler(IUnitOfWork uow) => _uow = uow;
+    public UpdateAppointmentStatusCommandHandler(IUnitOfWork uow, IInAppNotifier inAppNotifier)
+    {
+        _uow           = uow;
+        _inAppNotifier = inAppNotifier;
+    }
 
     public async Task<StatusUpdateConfirmationDto> Handle(
         UpdateAppointmentStatusCommand command,
@@ -70,6 +75,23 @@ internal sealed class UpdateAppointmentStatusCommandHandler
 
         // ── 5. Persist (interceptor auto-writes audit log) ────────────────
         await _uow.SaveChangesAsync(ct);
+
+        // ── 6. In-app notification to patient ─────────────────────────────
+        var patient = await _uow.Repository<PatientProfile>()
+            .GetByIdAsync(appointment.PatientId, ct);
+
+        if (patient is not null)
+        {
+            await _inAppNotifier.NotifyAsync(
+                patient.UserId,
+                appointment.PatientId,
+                appointment.Id,
+                NotificationType.StatusChange,
+                "Appointment status updated",
+                $"Your appointment status has changed to {appointment.Status}.",
+                $"/appointments/{appointment.Id}",
+                ct);
+        }
 
         return new StatusUpdateConfirmationDto(
             appointment.Id,

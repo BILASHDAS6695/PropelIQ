@@ -30,7 +30,7 @@ public sealed class AppointmentReminderJobTests
     }
 
     private static AppointmentReminderJob BuildJob(IUnitOfWork uow, IEmailSender emailSender) =>
-        new(uow, emailSender, NullLogger<AppointmentReminderJob>.Instance);
+        new(uow, emailSender, new Mock<IInAppNotifier>().Object, NullLogger<AppointmentReminderJob>.Instance);
 
     // ── tests ─────────────────────────────────────────────────────────────────
 

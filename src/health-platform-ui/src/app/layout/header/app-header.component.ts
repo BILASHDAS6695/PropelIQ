@@ -2,12 +2,12 @@ import { Component, output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { AvatarModule } from 'primeng/avatar';
-import { BadgeModule } from 'primeng/badge';
+import { NotificationBellComponent } from '../../shared/components/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [ButtonModule, ToolbarModule, AvatarModule, BadgeModule],
+  imports: [ButtonModule, ToolbarModule, AvatarModule, NotificationBellComponent],
   template: `
     <p-toolbar styleClass="app-header">
       <ng-template pTemplate="start">
@@ -20,13 +20,7 @@ import { BadgeModule } from 'primeng/badge';
       </ng-template>
       <ng-template pTemplate="end">
         <p-button icon="pi pi-search" [text]="true" [rounded]="true" aria-label="Search" />
-        <p-button
-          icon="pi pi-bell"
-          [text]="true"
-          [rounded]="true"
-          badge="3"
-          aria-label="Notifications"
-        />
+        <app-notification-bell />
         <p-avatar label="SC" shape="circle" styleClass="ml-2" />
       </ng-template>
     </p-toolbar>

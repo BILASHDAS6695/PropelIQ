@@ -37,4 +37,5 @@ public class User : AuditableEntity
 
     public PatientProfile? PatientProfile { get; set; }
     public ICollection<AuditLog> AuditLogs { get; set; } = [];
+    public ICollection<Notification> Notifications { get; set; } = [];
 }

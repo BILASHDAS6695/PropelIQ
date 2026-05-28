@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace HealthPlatform.Infrastructure.Reminders;
 
 /// <summary>
-/// Hangfire job that sends an appointment reminder email.
+/// Hangfire job that sends an appointment reminder email and in-app notification.
 /// Idempotent: if the appointment is already Cancelled, Completed, or NoShow
 /// at execution time the job logs and exits without sending.
 /// Retried up to 3 times with exponential back-off on transient failures.
@@ -18,16 +18,19 @@ internal sealed class AppointmentReminderJob
 {
     private readonly IUnitOfWork                     _uow;
     private readonly IEmailSender                    _emailSender;
+    private readonly IInAppNotifier                  _inAppNotifier;
     private readonly ILogger<AppointmentReminderJob> _logger;
 
     public AppointmentReminderJob(
         IUnitOfWork                     uow,
         IEmailSender                    emailSender,
+        IInAppNotifier                  inAppNotifier,
         ILogger<AppointmentReminderJob> logger)
     {
-        _uow         = uow;
-        _emailSender = emailSender;
-        _logger      = logger;
+        _uow           = uow;
+        _emailSender   = emailSender;
+        _inAppNotifier = inAppNotifier;
+        _logger        = logger;
     }
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 300, 1500, 7500 })]
@@ -74,5 +77,15 @@ internal sealed class AppointmentReminderJob
             email);
 
         await _emailSender.SendAsync(email, subject, body, ct);
+
+        await _inAppNotifier.NotifyAsync(
+            appointment.Patient.UserId,
+            appointment.PatientId,
+            appointment.Id,
+            NotificationType.Reminder,
+            "Appointment reminder",
+            $"Reminder: you have an appointment with {providerName} at {appointment.SlotTime:f} UTC.",
+            $"/appointments/{appointment.Id}",
+            ct);
     }
 }
