@@ -13,4 +13,9 @@ export const BOOKING_ROUTES: Routes = [
     loadComponent: () =>
       import('./my-appointments/my-appointments.component').then((m) => m.MyAppointmentsComponent),
   },
+  {
+    path: 'calendar',
+    loadComponent: () =>
+      import('../calendar/calendar-view.component').then((m) => m.CalendarViewComponent),
+  },
 ];

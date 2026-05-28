@@ -547,6 +547,39 @@ public sealed class AppointmentsController : ControllerBase
             new { appointmentId = confirmation.NewAppointmentId },
             confirmation);
     }
+
+    /// <summary>
+    /// Returns appointments within a date range for the calendar view.
+    /// Patients receive only their own appointments.
+    /// Staff/Admin can optionally filter by <paramref name="providerId"/>.
+    /// </summary>
+    /// <param name="from">Range start (ISO 8601). Defaults to start of the current month.</param>
+    /// <param name="to">Range end (ISO 8601). Defaults to end of the current month.</param>
+    /// <param name="providerId">Optional provider filter (staff/admin only).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — list of <see cref="CalendarAppointmentDto"/> ordered by SlotTime ascending.<br/>
+    /// 401 Unauthorized — user not authenticated.
+    /// </returns>
+    [HttpGet("calendar")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<CalendarAppointmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCalendar(
+        [FromQuery] DateTimeOffset? from,
+        [FromQuery] DateTimeOffset? to,
+        [FromQuery] Guid?           providerId,
+        CancellationToken           ct)
+    {
+        var now      = DateTimeOffset.UtcNow;
+        var dateFrom = from ?? new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        var dateTo   = to   ?? dateFrom.AddMonths(1).AddTicks(-1);
+
+        var results = await _sender.Send(
+            new GetCalendarAppointmentsQuery(dateFrom, dateTo, providerId), ct);
+
+        return Ok(results);
+    }
 }
 
 /// <summary>Payload for booking an appointment slot.</summary>

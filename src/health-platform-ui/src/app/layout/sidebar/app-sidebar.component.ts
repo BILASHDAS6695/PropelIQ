@@ -100,6 +100,7 @@ export class AppSidebarComponent {
     { label: 'Dashboard', icon: 'pi-home', route: '/dashboard' },
     { label: 'Book Appointment', icon: 'pi-calendar-plus', route: '/booking' },
     { label: 'My Appointments', icon: 'pi-calendar', route: '/booking/appointments' },
+    { label: 'Calendar', icon: 'pi-calendar-times', route: '/booking/calendar' },
     { label: 'Intake', icon: 'pi-comments', route: '/intake' },
     { label: 'Documents', icon: 'pi-file', route: '/clinical' },
     { label: 'Notifications', icon: 'pi-sliders-h', route: '/notification-preferences' },
