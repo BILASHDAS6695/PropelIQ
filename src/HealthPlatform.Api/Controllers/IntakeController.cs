@@ -1,5 +1,8 @@
 using System.Net.Http.Json;
 using HealthPlatform.Application.Features.Intake;
+using HealthPlatform.Application.Interfaces;
+using HealthPlatform.Domain.Enums;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,13 +15,19 @@ public class IntakeController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<IntakeController> _logger;
+    private readonly ISender _sender;
+    private readonly ICurrentUserService _currentUser;
 
     public IntakeController(
         IHttpClientFactory httpClientFactory,
-        ILogger<IntakeController> logger)
+        ILogger<IntakeController> logger,
+        ISender sender,
+        ICurrentUserService currentUser)
     {
         _httpClientFactory = httpClientFactory;
-        _logger = logger;
+        _logger            = logger;
+        _sender            = sender;
+        _currentUser       = currentUser;
     }
 
     [HttpPost("chat")]
@@ -54,5 +63,69 @@ public class IntakeController : ControllerBase
             _logger.LogError(ex, "AI service unreachable on intake/chat");
             return StatusCode(503, new { detail = "AI service unavailable." });
         }
+    }
+
+    [HttpPost("draft")]
+    public async Task<IActionResult> SaveDraft(
+        [FromBody] SaveIntakeDraftRequest request,
+        CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return Unauthorized();
+
+        var cmd = new SaveIntakeDraftCommand(
+            request.AppointmentId,
+            _currentUser.UserId.Value,
+            request.Mode,
+            request.Data);
+
+        var id = await _sender.Send(cmd, ct);
+        return Ok(new { id });
+    }
+
+    [HttpPost("submit")]
+    public async Task<IActionResult> Submit(
+        [FromBody] SubmitIntakeRequest request,
+        CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return Unauthorized();
+
+        var cmd = new SubmitIntakeCommand(
+            request.AppointmentId,
+            _currentUser.UserId.Value,
+            request.Mode,
+            request.Data);
+
+        var id = await _sender.Send(cmd, ct);
+        return Ok(new { id });
+    }
+
+    [HttpGet("{appointmentId:guid}")]
+    public async Task<ActionResult<IntakeSummaryDto>> GetSummary(
+        Guid appointmentId,
+        CancellationToken ct)
+    {
+        var result = await _sender.Send(new GetIntakeSummaryQuery(appointmentId), ct);
+        if (result is null) return NotFound();
+
+        if (result.Status == IntakeStatus.Draft &&
+            HttpContext.User.IsInRole("Provider"))
+            Response.Headers.Append("X-Intake-Warning", "Intake not completed by patient");
+
+        return Ok(result);
+    }
+
+    [HttpPut("{appointmentId:guid}/reviewed")]
+    public async Task<IActionResult> MarkReviewed(
+        Guid appointmentId,
+        CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return Unauthorized();
+
+        await _sender.Send(
+            new MarkIntakeReviewedCommand(appointmentId, _currentUser.UserId.Value), ct);
+        return NoContent();
     }
 }

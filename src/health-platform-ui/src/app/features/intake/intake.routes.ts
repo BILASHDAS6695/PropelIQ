@@ -11,4 +11,9 @@ export const INTAKE_ROUTES: Routes = [
     loadComponent: () =>
       import('./intake-landing/intake-landing.component').then((m) => m.IntakeLandingComponent),
   },
+  {
+    path: 'summary/:appointmentId',
+    loadComponent: () =>
+      import('./intake-summary/intake-summary.component').then((m) => m.IntakeSummaryComponent),
+  },
 ];
