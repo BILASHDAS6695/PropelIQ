@@ -3,9 +3,9 @@ from __future__ import annotations
 import structlog
 from fastapi import APIRouter, HTTPException
 
+from app.config import settings
 from app.models import NerRequest, NerResponse, OcrRequest, OcrResponse
 from app.services.ner_service import NerService
-from app.config import settings
 
 router = APIRouter()
 logger = structlog.get_logger(__name__)
