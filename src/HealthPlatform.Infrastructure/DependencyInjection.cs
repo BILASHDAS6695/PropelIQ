@@ -2,6 +2,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Application.Settings;
+using HealthPlatform.Infrastructure.Documents;
 using HealthPlatform.Infrastructure.Cache;
 using HealthPlatform.Infrastructure.Jobs;
 using HealthPlatform.Infrastructure.Messaging;
@@ -109,6 +110,10 @@ public static class DependencyInjection
                 name: "redis",
                 failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded,
                 tags: ["cache", "ready"]);
+
+        services.Configure<DocumentStorageSettings>(
+            configuration.GetSection(DocumentStorageSettings.SectionName));
+        services.AddScoped<IDocumentStorageService, LocalDocumentStorageService>();
 
         return services;
     }

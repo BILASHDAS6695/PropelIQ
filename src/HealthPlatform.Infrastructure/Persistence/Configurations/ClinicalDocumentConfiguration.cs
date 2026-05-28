@@ -11,7 +11,10 @@ internal sealed class ClinicalDocumentConfiguration : IEntityTypeConfiguration<C
         builder.HasKey(cd => cd.Id);
 
         builder.Property(cd => cd.FileName).IsRequired().HasMaxLength(500);
+        builder.Property(cd => cd.MimeType).IsRequired().HasMaxLength(100);
         builder.Property(cd => cd.StoragePath).IsRequired().HasMaxLength(1000);
+        builder.Property(cd => cd.FileSizeBytes).IsRequired();
+        builder.Property(cd => cd.EncryptionIv).IsRequired().HasMaxLength(64);
 
         builder.Property(cd => cd.ProcessingStatus)
             .HasConversion<string>()

@@ -591,3 +591,19 @@ COMMENT ON COLUMN slot_swap_requests.overridden_at IS
     'UTC timestamp when the staff override was applied.';
 COMMENT ON COLUMN slot_swap_requests.three_way_new_target_slot_id IS
     'For three-way reassignment: new slot ID assigned to the target patient.';
+
+-- ============================================================
+-- US-045: Document Upload — add mime_type and encryption_iv
+-- ============================================================
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'clinical_documents' AND column_name = 'mime_type'
+    ) THEN
+        ALTER TABLE clinical_documents
+            ADD COLUMN mime_type    character varying(100) NOT NULL DEFAULT '',
+            ADD COLUMN encryption_iv character varying(64)  NOT NULL DEFAULT '';
+    END IF;
+END $EF$;
