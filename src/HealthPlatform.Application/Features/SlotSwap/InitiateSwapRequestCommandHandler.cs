@@ -17,18 +17,21 @@ internal sealed class InitiateSwapRequestCommandHandler
     private readonly IUnitOfWork                                _uow;
     private readonly ICurrentUserService                        _currentUser;
     private readonly IEmailSender                               _email;
+    private readonly IInAppNotifier                             _inAppNotifier;
     private readonly ILogger<InitiateSwapRequestCommandHandler> _logger;
 
     public InitiateSwapRequestCommandHandler(
         IUnitOfWork                                 uow,
         ICurrentUserService                         currentUser,
         IEmailSender                                email,
+        IInAppNotifier                              inAppNotifier,
         ILogger<InitiateSwapRequestCommandHandler>  logger)
     {
-        _uow         = uow;
-        _currentUser = currentUser;
-        _email       = email;
-        _logger      = logger;
+        _uow           = uow;
+        _currentUser   = currentUser;
+        _email         = email;
+        _inAppNotifier = inAppNotifier;
+        _logger        = logger;
     }
 
     public async Task<SwapRequestDto> Handle(
@@ -124,12 +127,16 @@ internal sealed class InitiateSwapRequestCommandHandler
             await _uow.Repository<Notification>().AddAsync(new Notification
             {
                 Id             = Guid.NewGuid(),
+                UserId         = targetPatientProfile.UserId,
                 PatientId      = targetAppt.PatientId,
                 AppointmentId  = targetAppt.Id,
                 Channel        = NotificationChannel.Email,
                 Type           = NotificationType.SlotSwap,
+                Title          = "Slot swap request",
+                Message        = "A patient has requested to swap appointment slots with you.",
                 SentAt         = now,
                 DeliveryStatus = DeliveryStatus.Sent,
+                ExpiresAt      = now.Add(SwapTtl),
             }, ct);
 
             await _uow.SaveChangesAsync(ct);
@@ -146,6 +153,16 @@ internal sealed class InitiateSwapRequestCommandHandler
                     $"Your current appointment time is {targetAppt.SlotTime:f} UTC. " +
                     "Log in to accept or decline.",
                     ct);
+
+            await _inAppNotifier.NotifyAsync(
+                targetPatientProfile.UserId,
+                targetAppt.PatientId,
+                targetAppt.Id,
+                NotificationType.SwapRequest,
+                "Slot swap request",
+                $"A patient wants to swap their {requesterAppt.SlotTime:f} slot with your {targetAppt.SlotTime:f} slot.",
+                $"/appointments/{targetAppt.Id}",
+                ct);
         }
 
         _logger.LogInformation(

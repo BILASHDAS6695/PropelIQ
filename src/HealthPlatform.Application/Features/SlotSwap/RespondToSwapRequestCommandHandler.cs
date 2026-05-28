@@ -14,18 +14,21 @@ internal sealed class RespondToSwapRequestCommandHandler
     private readonly IUnitOfWork                                  _uow;
     private readonly ICurrentUserService                          _currentUser;
     private readonly IEmailSender                                 _email;
+    private readonly IInAppNotifier                               _inAppNotifier;
     private readonly ILogger<RespondToSwapRequestCommandHandler>  _logger;
 
     public RespondToSwapRequestCommandHandler(
         IUnitOfWork                                   uow,
         ICurrentUserService                           currentUser,
         IEmailSender                                  email,
+        IInAppNotifier                                inAppNotifier,
         ILogger<RespondToSwapRequestCommandHandler>   logger)
     {
-        _uow         = uow;
-        _currentUser = currentUser;
-        _email       = email;
-        _logger      = logger;
+        _uow           = uow;
+        _currentUser   = currentUser;
+        _email         = email;
+        _inAppNotifier = inAppNotifier;
+        _logger        = logger;
     }
 
     public async Task<SwapResponseDto> Handle(
@@ -104,23 +107,31 @@ internal sealed class RespondToSwapRequestCommandHandler
             await notifRepo.AddAsync(new Notification
             {
                 Id             = Guid.NewGuid(),
+                UserId         = swapRequest.RequesterPatient.UserId,
                 PatientId      = swapRequest.RequesterPatientId,
                 AppointmentId  = requesterAppt.Id,
                 Channel        = NotificationChannel.Email,
                 Type           = NotificationType.SlotSwap,
+                Title          = "Slot swap accepted",
+                Message        = $"Your slot swap request was accepted. New time: {requesterAppt.SlotTime:f} UTC.",
                 SentAt         = now,
                 DeliveryStatus = DeliveryStatus.Sent,
+                ExpiresAt      = now.AddDays(90),
             }, ct);
 
             await notifRepo.AddAsync(new Notification
             {
                 Id             = Guid.NewGuid(),
+                UserId         = callerPatient.UserId,
                 PatientId      = callerPatient.Id,
                 AppointmentId  = targetAppt.Id,
                 Channel        = NotificationChannel.Email,
                 Type           = NotificationType.SlotSwap,
+                Title          = "Slot swap confirmed",
+                Message        = $"You accepted a slot swap. New time: {targetAppt.SlotTime:f} UTC.",
                 SentAt         = now,
                 DeliveryStatus = DeliveryStatus.Sent,
+                ExpiresAt      = now.AddDays(90),
             }, ct);
 
             if (requesterUser is not null)
@@ -152,12 +163,16 @@ internal sealed class RespondToSwapRequestCommandHandler
             await _uow.Repository<Notification>().AddAsync(new Notification
             {
                 Id             = Guid.NewGuid(),
+                UserId         = swapRequest.RequesterPatient.UserId,
                 PatientId      = swapRequest.RequesterPatientId,
                 AppointmentId  = requesterAppt.Id,
                 Channel        = NotificationChannel.Email,
                 Type           = NotificationType.SlotSwap,
+                Title          = "Slot swap declined",
+                Message        = "Your slot swap request was declined by the other patient.",
                 SentAt         = now,
                 DeliveryStatus = DeliveryStatus.Sent,
+                ExpiresAt      = now.AddDays(90),
             }, ct);
 
             if (requesterUser is not null)
@@ -174,6 +189,42 @@ internal sealed class RespondToSwapRequestCommandHandler
 
         _uow.Repository<SlotSwapRequest>().Update(swapRequest);
         await _uow.SaveChangesAsync(ct);
+
+        // ── 6. In-app notifications (after commit) ────────────────────────
+        if (command.Accept)
+        {
+            await _inAppNotifier.NotifyAsync(
+                swapRequest.RequesterPatient.UserId,
+                swapRequest.RequesterPatientId,
+                requesterAppt.Id,
+                NotificationType.SwapResult,
+                "Slot swap accepted",
+                $"Your slot swap request was accepted. New time: {requesterAppt.SlotTime:f} UTC.",
+                $"/appointments/{requesterAppt.Id}",
+                ct);
+
+            await _inAppNotifier.NotifyAsync(
+                callerPatient.UserId,
+                callerPatient.Id,
+                targetAppt.Id,
+                NotificationType.SwapResult,
+                "Slot swap confirmed",
+                $"You accepted a slot swap. New time: {targetAppt.SlotTime:f} UTC.",
+                $"/appointments/{targetAppt.Id}",
+                ct);
+        }
+        else
+        {
+            await _inAppNotifier.NotifyAsync(
+                swapRequest.RequesterPatient.UserId,
+                swapRequest.RequesterPatientId,
+                requesterAppt.Id,
+                NotificationType.SwapResult,
+                "Slot swap declined",
+                "Your slot swap request was declined by the other patient.",
+                $"/appointments/{requesterAppt.Id}",
+                ct);
+        }
 
         return new SwapResponseDto(
             swapRequest.Id,

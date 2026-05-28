@@ -5,6 +5,7 @@ using HealthPlatform.Api.Authorization;
 using HealthPlatform.Api.Hubs;
 using HealthPlatform.Api.Logging;
 using HealthPlatform.Api.Middleware;
+using HealthPlatform.Api.Notifications;
 using HealthPlatform.Api.Services;
 using HealthPlatform.Application;
 using HealthPlatform.Application.Interfaces;
@@ -40,6 +41,7 @@ try
     builder.Services.AddHangfireServer();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserService, HttpCurrentUserService>();
+    builder.Services.AddScoped<IInAppNotifier, SignalRInAppNotifier>();
 
     // API services
     builder.Services.AddControllers();
