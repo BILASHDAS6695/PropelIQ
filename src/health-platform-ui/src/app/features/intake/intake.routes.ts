@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { intakeWindowGuard } from './intake-window.guard';
 
 export const INTAKE_ROUTES: Routes = [
   {
@@ -8,6 +9,7 @@ export const INTAKE_ROUTES: Routes = [
   },
   {
     path: 'form',
+    canActivate: [intakeWindowGuard],
     loadComponent: () =>
       import('./intake-landing/intake-landing.component').then((m) => m.IntakeLandingComponent),
   },

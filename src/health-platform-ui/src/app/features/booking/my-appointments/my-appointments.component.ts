@@ -112,8 +112,10 @@ const PAST_STATUSES: string[] = [
                     [showSwap]="true"
                     [showSwapHistory]="true"
                     [showAddToCalendar]="true"
+                    [showIntakeButton]="true"
                     (cancelRequest)="openCancelDialog($event)"
                     (swapRequest)="openSwapBrowser($event)"
+                    (intakeRequest)="onIntakeRequest($event)"
                   />
                 }
               }
@@ -316,5 +318,11 @@ export class MyAppointmentsComponent implements OnInit {
   closeSwapConfirm(): void {
     this.showSwapConfirm.set(false);
     this.showSwapBrowser.set(true);
+  }
+
+  onIntakeRequest(appt: AppointmentItemDto): void {
+    void this.router.navigate(['/intake/form'], {
+      queryParams: { appointmentId: appt.appointmentId },
+    });
   }
 }
