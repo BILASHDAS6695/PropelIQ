@@ -7,6 +7,7 @@ using HealthPlatform.Infrastructure.Jobs;
 using HealthPlatform.Infrastructure.Messaging;
 using HealthPlatform.Infrastructure.Notifications;
 using HealthPlatform.Infrastructure.Reminders;
+using HealthPlatform.Infrastructure.Reports;
 using HealthPlatform.Infrastructure.Persistence;
 using HealthPlatform.Infrastructure.Persistence.Interceptors;
 using HealthPlatform.Infrastructure.Persistence.Seed;
@@ -89,6 +90,9 @@ public static class DependencyInjection
         services.AddTransient<AppointmentReminderJob>();
         services.AddScoped<IReminderScheduler, HangfireReminderScheduler>();
         services.AddScoped<INotificationPreferenceChecker, NotificationPreferenceCheckerService>();
+        services.AddTransient<IAppointmentReportBuilder, AppointmentReportBuilder>();
+        services.AddTransient<GeneratePdfReportJob>();
+        services.AddScoped<IReportJobScheduler, HangfireReportJobScheduler>();
         services.Configure<ReminderSettings>(
             configuration.GetSection(ReminderSettings.SectionName));
 
