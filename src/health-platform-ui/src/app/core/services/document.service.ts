@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { DocumentSummaryDto, DocumentUploadResultDto } from '../models/document.models';
+import type { DocumentSummaryDto, DocumentUploadResultDto, DocumentOcrResultDto } from '../models/document.models';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentService {
@@ -29,6 +29,17 @@ export class DocumentService {
     return this.http.post<DocumentUploadResultDto>(
       `${this.base}/patients/${patientId}/documents`,
       form,
+    );
+  }
+
+  /**
+   * GET /api/patients/{patientId}/documents/{documentId}
+   * Returns the OCR extraction result for a specific document.
+   * patientId is the patient's User.Id (JWT sub).
+   */
+  getDocumentOcrResult(patientId: string, documentId: string): Observable<DocumentOcrResultDto> {
+    return this.http.get<DocumentOcrResultDto>(
+      `${this.base}/patients/${patientId}/documents/${documentId}`,
     );
   }
 }

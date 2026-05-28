@@ -607,3 +607,19 @@ BEGIN
             ADD COLUMN encryption_iv character varying(64)  NOT NULL DEFAULT '';
     END IF;
 END $EF$;
+
+-- ============================================================
+-- US-046: OCR Pipeline — add extracted_text (JSONB) and ocr_confidence_score
+-- ============================================================
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'clinical_documents' AND column_name = 'extracted_text'
+    ) THEN
+        ALTER TABLE clinical_documents
+            ADD COLUMN extracted_text       jsonb            NULL,
+            ADD COLUMN ocr_confidence_score double precision NULL;
+    END IF;
+END $EF$;
