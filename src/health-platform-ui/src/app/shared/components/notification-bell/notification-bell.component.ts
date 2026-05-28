@@ -93,6 +93,17 @@ import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
           </li>
         }
       </ul>
+      <p-divider styleClass="my-1" />
+      <div class="flex justify-content-center px-3 pb-2">
+        <a
+          routerLink="/notification-preferences"
+          class="pref-link text-xs text-color-secondary flex align-items-center gap-1"
+          (click)="panel.hide()"
+          aria-label="Manage notification preferences"
+        >
+          <i class="pi pi-sliders-h"></i> Preferences
+        </a>
+      </div>
     </p-popover>
   `,
   styles: [
@@ -121,6 +132,13 @@ import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
         height: 8px;
         border-radius: 50%;
         background: var(--p-primary-color);
+      }
+      .pref-link {
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+      .pref-link:hover {
+        color: var(--p-primary-color);
       }
     `,
   ],

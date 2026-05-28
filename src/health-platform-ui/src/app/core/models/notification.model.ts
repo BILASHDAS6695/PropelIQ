@@ -40,3 +40,21 @@ export const NOTIFICATION_ICONS: Record<NotificationType, string> = {
   ArrivalAlert: 'pi pi-map-marker',
   StatusChange: 'pi pi-sync',
 };
+
+export interface NotificationPreferences {
+  emailReminders: boolean;
+  emailSwap: boolean;
+  emailGeneral: boolean;
+  inAppReminders: boolean;
+  inAppSwap: boolean;
+  inAppGeneral: boolean;
+}
+
+export const DEFAULT_PREFERENCES: NotificationPreferences = {
+  emailReminders: true,
+  emailSwap: true,
+  emailGeneral: true,
+  inAppReminders: true,
+  inAppSwap: true,
+  inAppGeneral: true,
+};

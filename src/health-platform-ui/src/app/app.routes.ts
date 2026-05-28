@@ -36,6 +36,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'notification-preferences',
+        loadComponent: () =>
+          import('./features/notification-preferences/notification-preferences.component').then(
+            (m) => m.NotificationPreferencesComponent,
+          ),
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard('admin')],
         loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
