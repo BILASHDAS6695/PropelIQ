@@ -5,8 +5,14 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-import spacy
-from spacy.language import Language
+try:
+    import spacy
+    from spacy.language import Language
+    _SPACY_AVAILABLE = True
+except ImportError:  # CI / lightweight environments without spacy
+    spacy = None  # type: ignore[assignment]
+    Language = object  # type: ignore[assignment,misc]
+    _SPACY_AVAILABLE = False
 
 if TYPE_CHECKING:
     from spacy.tokens import Doc
@@ -47,6 +53,11 @@ class NerService:
     """
 
     def __init__(self) -> None:
+        if not _SPACY_AVAILABLE:
+            raise NotImplementedError(
+                "NerService requires spacy and scispaCy models. "
+                "Install requirements.txt (not requirements-ci.txt) to use this service."
+            )
         self._bc5cdr: Language = self._load("en_ner_bc5cdr_md")
         self._bionlp: Language = self._load("en_ner_bionlp13cg_md")
         self._add_ruler_patterns()
@@ -165,6 +176,8 @@ class NerService:
 
     @staticmethod
     def _load(model_name: str) -> Language:
+        if not _SPACY_AVAILABLE or spacy is None:
+            raise NotImplementedError("spacy is not installed")
         try:
             return spacy.load(model_name)
         except OSError as exc:

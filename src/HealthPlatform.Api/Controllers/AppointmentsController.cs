@@ -279,6 +279,7 @@ public sealed class AppointmentsController : ControllerBase
     /// <param name="providerId">Optional provider filter.</param>
     /// <param name="patientName">Partial patient name (case-insensitive, min 2 chars).</param>
     /// <param name="appointmentId">Exact appointment ID filter.</param>
+    /// <param name="hasIntakePending">When true, limits results to patients who have not yet completed intake.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>
     /// 200 OK — list of matching appointments for today.<br/>
