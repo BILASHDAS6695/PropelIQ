@@ -24,6 +24,7 @@ public sealed class AppointmentForReminderSpecification : ISpecification<Appoint
         a => a.Patient,
         a => a.Patient.User,
         a => a.Provider,
+        a => a.IntakeRecord!,
     ];
 
     public Expression<Func<Appointment, object>>?      OrderBy           => null;

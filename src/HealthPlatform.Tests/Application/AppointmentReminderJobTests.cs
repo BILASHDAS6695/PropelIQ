@@ -3,6 +3,7 @@ using HealthPlatform.Domain.Entities;
 using HealthPlatform.Domain.Enums;
 using HealthPlatform.Infrastructure.Reminders;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace HealthPlatform.Tests.Application;
@@ -42,7 +43,8 @@ public sealed class AppointmentReminderJobTests
     private static AppointmentReminderJob BuildJob(IUnitOfWork uow, IEmailSender emailSender) =>
         new(uow, emailSender, new Mock<IInAppNotifier>().Object,
             AllowAllPrefChecker(),
-            NullLogger<AppointmentReminderJob>.Instance);
+            NullLogger<AppointmentReminderJob>.Instance,
+            Options.Create(new ReminderSettings()));
 
     // ── tests ─────────────────────────────────────────────────────────────────
 
