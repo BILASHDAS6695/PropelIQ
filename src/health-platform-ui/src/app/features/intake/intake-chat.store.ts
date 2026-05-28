@@ -17,6 +17,7 @@ interface IntakeChatState {
   isLoading: boolean;
   isComplete: boolean;
   collected: Record<string, string | null>;
+  failedAtIndex: number | null;
 }
 
 const initialState: IntakeChatState = {
@@ -25,6 +26,7 @@ const initialState: IntakeChatState = {
   isLoading: false,
   isComplete: false,
   collected: {},
+  failedAtIndex: null,
 };
 
 export const IntakeChatStore = signalStore(
@@ -79,6 +81,7 @@ export const IntakeChatStore = signalStore(
             collected: response.collected,
             isComplete: response.isComplete,
             isLoading: false,
+            failedAtIndex: null,
           });
 
           if (response.fallbackRequired) {
@@ -86,9 +89,24 @@ export const IntakeChatStore = signalStore(
             void router.navigate(['/intake/form']);
           }
         } catch {
-          patchState(store, { isLoading: false });
-          toast.error('Error', 'Failed to send message. Please try again.');
+          patchState(store, {
+            isLoading: false,
+            failedAtIndex: store.messages().length - 1,
+          });
+          toast.warn('Message not sent', 'Tap the Retry button to resend.');
         }
+      },
+
+      async retryLast(): Promise<void> {
+        const idx = store.failedAtIndex();
+        if (idx === null) return;
+        const msg = store.messages()[idx];
+        if (!msg || msg.role !== 'user') return;
+        patchState(store, {
+          messages: store.messages().filter((_, i) => i !== idx),
+          failedAtIndex: null,
+        });
+        await this.sendMessage(msg.content);
       },
 
       reset(): void {

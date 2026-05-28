@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -71,7 +79,17 @@ const SEVERITY_LABELS: Record<number, string> = {
         Fields marked * are required. Your information is kept private.
       </p>
 
-      <!-- Progress -->
+      <!-- Step indicator -->
+      <div class="flex gap-1 mb-3" role="navigation" aria-label="Intake form steps">
+        @for (n of [1, 2, 3]; track n) {
+          <p-tag
+            [value]="'Step ' + n"
+            [severity]="currentStep() === n ? 'info' : currentStep() > n ? 'success' : 'secondary'"
+          />
+        }
+      </div>
+
+      <!-- Progress bar -->
       <p-progressBar
         [value]="store.progress()"
         [showValue]="true"
@@ -79,147 +97,197 @@ const SEVERITY_LABELS: Record<number, string> = {
         aria-label="Intake form completion"
       />
 
-      <!-- 1. Chief Complaint -->
-      <section class="section">
-        <h3 class="section-title">1. Chief Complaint *</h3>
-        <textarea
-          pTextarea
-          [(ngModel)]="chiefComplaint"
-          (ngModelChange)="store.patch({ chiefComplaint: $event })"
-          placeholder="What brings you in today?"
-          rows="3"
-          [class.ng-invalid]="submitted() && !chiefComplaint.trim()"
-          aria-label="Chief complaint"
-          class="w-full"
-        ></textarea>
-        @if (submitted() && !chiefComplaint.trim()) {
-          <small class="text-red-500">Chief complaint is required.</small>
-        }
-      </section>
-
-      <p-divider />
-
-      <!-- 2. Symptoms -->
-      <section class="section">
-        <h3 class="section-title">2. Symptoms</h3>
-        <div class="flex flex-wrap gap-3">
-          @for (symptom of commonSymptoms; track symptom) {
-            <div class="flex align-items-center gap-2">
-              <p-checkbox
-                [(ngModel)]="selectedSymptoms"
-                [value]="symptom"
-                (ngModelChange)="store.patch({ symptoms: $event })"
-                [inputId]="'sym-' + symptom"
-              />
-              <label [for]="'sym-' + symptom">{{ symptom }}</label>
-            </div>
+      <!-- ── Step 1: Chief Complaint + Symptoms ── -->
+      @if (currentStep() === 1) {
+        <section class="section">
+          <h3 class="section-title">1. Chief Complaint *</h3>
+          <textarea
+            pTextarea
+            [(ngModel)]="chiefComplaint"
+            (ngModelChange)="store.patch({ chiefComplaint: $event })"
+            placeholder="What brings you in today?"
+            rows="3"
+            [class.ng-invalid]="submitted() && !chiefComplaint.trim()"
+            aria-label="Chief complaint"
+            class="w-full"
+          ></textarea>
+          @if (submitted() && !chiefComplaint.trim()) {
+            <small class="text-red-500">Chief complaint is required.</small>
           }
-        </div>
-      </section>
+        </section>
 
-      <p-divider />
+        <p-divider />
 
-      <!-- 3. Duration & Severity -->
-      <section class="section">
-        <h3 class="section-title">3. Duration &amp; Severity</h3>
-        <div class="flex flex-column gap-3">
-          <input
-            pInputText
-            [(ngModel)]="duration"
-            (ngModelChange)="store.patch({ duration: $event })"
-            placeholder="e.g. 3 days, 2 weeks"
-            aria-label="Symptom duration"
-          />
-          <div>
-            <div class="block mb-2">
-              Severity: <strong>{{ severity }} &mdash; {{ severityLabel() }}</strong>
-            </div>
-            <p-slider
-              [(ngModel)]="severity"
-              (ngModelChange)="store.patch({ severity: $event })"
-              [min]="1"
-              [max]="10"
-              [step]="1"
-              styleClass="w-full"
-              aria-label="Symptom severity 1 to 10"
+        <section class="section">
+          <h3 class="section-title">2. Symptoms</h3>
+          <div class="flex flex-wrap gap-3">
+            @for (symptom of commonSymptoms; track symptom) {
+              <div class="flex align-items-center gap-2">
+                <p-checkbox
+                  [(ngModel)]="selectedSymptoms"
+                  [value]="symptom"
+                  (ngModelChange)="store.patch({ symptoms: $event })"
+                  [inputId]="'sym-' + symptom"
+                />
+                <label [for]="'sym-' + symptom">{{ symptom }}</label>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- ── Step 2: Duration / Severity / Medications / Allergies ── -->
+      @if (currentStep() === 2) {
+        <section class="section">
+          <h3 class="section-title">3. Duration &amp; Severity</h3>
+          <div class="flex flex-column gap-3">
+            <input
+              pInputText
+              [(ngModel)]="duration"
+              (ngModelChange)="store.patch({ duration: $event })"
+              placeholder="e.g. 3 days, 2 weeks"
+              aria-label="Symptom duration"
             />
-            <div class="flex justify-content-between text-xs text-color-secondary mt-1">
-              <span>1 &mdash; Minimal</span>
-              <span>5 &mdash; Moderate</span>
-              <span>10 &mdash; Critical</span>
+            <div>
+              <div class="block mb-2">
+                Severity: <strong>{{ severity }} &mdash; {{ severityLabel() }}</strong>
+              </div>
+              <p-slider
+                [(ngModel)]="severity"
+                (ngModelChange)="store.patch({ severity: $event })"
+                [min]="1"
+                [max]="10"
+                [step]="1"
+                styleClass="w-full"
+                aria-label="Symptom severity 1 to 10"
+              />
+              <div class="flex justify-content-between text-xs text-color-secondary mt-1">
+                <span>1 &mdash; Minimal</span>
+                <span>5 &mdash; Moderate</span>
+                <span>10 &mdash; Critical</span>
+              </div>
             </div>
           </div>
+        </section>
+
+        <p-divider />
+
+        <section class="section">
+          <h3 class="section-title">4. Current Medications</h3>
+          <p-autoComplete
+            [(ngModel)]="medications"
+            (ngModelChange)="store.patch({ medications: $event })"
+            [suggestions]="medicationSuggestions()"
+            (completeMethod)="filterMedications($event)"
+            [multiple]="true"
+            placeholder="Type or select medications…"
+            aria-label="Current medications"
+            styleClass="w-full"
+          />
+        </section>
+
+        <p-divider />
+
+        <section class="section">
+          <h3 class="section-title">5. Allergies</h3>
+          <p-autoComplete
+            [(ngModel)]="allergies"
+            (ngModelChange)="store.patch({ allergies: $event })"
+            [suggestions]="allergySuggestions()"
+            (completeMethod)="filterAllergies($event)"
+            [multiple]="true"
+            placeholder="Type or select allergies…"
+            aria-label="Known allergies"
+            styleClass="w-full"
+          />
+        </section>
+      }
+
+      <!-- ── Step 3: Medical History + Review Panel ── -->
+      @if (currentStep() === 3) {
+        <section class="section">
+          <h3 class="section-title">6. Relevant Medical History</h3>
+          <textarea
+            pTextarea
+            [(ngModel)]="medicalHistory"
+            (ngModelChange)="store.patch({ medicalHistory: $event })"
+            placeholder="Previous diagnoses, surgeries, chronic conditions…"
+            rows="3"
+            aria-label="Medical history"
+            class="w-full"
+          ></textarea>
+        </section>
+
+        <p-divider />
+
+        <!-- Review panel -->
+        <div class="review-panel" role="region" aria-label="Intake summary review">
+          <h3 class="section-title">Review Your Intake</h3>
+          <dl class="review-list">
+            <dt>Chief Complaint</dt>
+            <dd>{{ chiefComplaint || '—' }}</dd>
+            <dt>Symptoms</dt>
+            <dd>{{ selectedSymptoms.length ? selectedSymptoms.join(', ') : '—' }}</dd>
+            <dt>Duration</dt>
+            <dd>{{ duration || '—' }}</dd>
+            <dt>Severity</dt>
+            <dd>{{ severity }} / 10</dd>
+            <dt>Medications</dt>
+            <dd>{{ medications.length ? medications.join(', ') : 'None reported' }}</dd>
+            <dt>Allergies</dt>
+            <dd>{{ allergies.length ? allergies.join(', ') : 'None reported' }}</dd>
+            <dt>Medical History</dt>
+            <dd>{{ medicalHistory || '—' }}</dd>
+          </dl>
+          <div class="flex gap-2 mt-3">
+            <p-button
+              label="Edit"
+              severity="secondary"
+              icon="pi pi-pencil"
+              [outlined]="true"
+              (onClick)="currentStep.set(1)"
+              aria-label="Go back and edit intake form"
+            />
+            <p-button
+              label="Confirm &amp; Submit"
+              icon="pi pi-check"
+              (onClick)="submit()"
+              aria-label="Confirm and submit intake form"
+            />
+          </div>
         </div>
-      </section>
+      }
 
-      <p-divider />
-
-      <!-- 4. Medications -->
-      <section class="section">
-        <h3 class="section-title">4. Current Medications</h3>
-        <p-autoComplete
-          [(ngModel)]="medications"
-          (ngModelChange)="store.patch({ medications: $event })"
-          [suggestions]="medicationSuggestions()"
-          (completeMethod)="filterMedications($event)"
-          [multiple]="true"
-          placeholder="Type or select medications…"
-          aria-label="Current medications"
-          styleClass="w-full"
-        />
-      </section>
-
-      <p-divider />
-
-      <!-- 5. Allergies -->
-      <section class="section">
-        <h3 class="section-title">5. Allergies</h3>
-        <p-autoComplete
-          [(ngModel)]="allergies"
-          (ngModelChange)="store.patch({ allergies: $event })"
-          [suggestions]="allergySuggestions()"
-          (completeMethod)="filterAllergies($event)"
-          [multiple]="true"
-          placeholder="Type or select allergies…"
-          aria-label="Known allergies"
-          styleClass="w-full"
-        />
-      </section>
-
-      <p-divider />
-
-      <!-- 6. Medical History -->
-      <section class="section">
-        <h3 class="section-title">6. Relevant Medical History</h3>
-        <textarea
-          pTextarea
-          [(ngModel)]="medicalHistory"
-          (ngModelChange)="store.patch({ medicalHistory: $event })"
-          placeholder="Previous diagnoses, surgeries, chronic conditions…"
-          rows="3"
-          aria-label="Medical history"
-          class="w-full"
-        ></textarea>
-      </section>
-
-      <p-divider />
-
-      <!-- Actions -->
-      <div class="flex gap-2 mt-2">
+      <!-- ── Navigation row (all steps) ── -->
+      <div class="flex justify-content-between align-items-center mt-4">
         <p-button
-          label="Save Draft"
+          label="Save &amp; Continue Later"
           icon="pi pi-save"
           severity="secondary"
           [outlined]="true"
           (onClick)="saveDraft()"
-          aria-label="Save intake draft"
+          aria-label="Save intake draft and continue later"
         />
-        <p-button
-          label="Submit Intake"
-          icon="pi pi-check"
-          (onClick)="submit()"
-          aria-label="Submit intake form"
-        />
+        <div class="flex gap-2">
+          @if (currentStep() > 1) {
+            <p-button
+              label="Back"
+              icon="pi pi-arrow-left"
+              severity="secondary"
+              (onClick)="prevStep()"
+              aria-label="Go to previous step"
+            />
+          }
+          @if (currentStep() < 3) {
+            <p-button
+              label="Next"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+              (onClick)="nextStep()"
+              aria-label="Go to next step"
+            />
+          }
+        </div>
       </div>
     </div>
   `,
@@ -239,12 +307,48 @@ const SEVERITY_LABELS: Record<number, string> = {
         margin-bottom: 0.75rem;
         color: var(--text-color);
       }
+      .review-panel {
+        background: var(--surface-ground);
+        border: 1px solid var(--surface-border);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .review-list {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.375rem 1rem;
+        font-size: 0.9375rem;
+      }
+      .review-list dt {
+        font-weight: 600;
+        color: var(--text-color-secondary);
+        white-space: nowrap;
+      }
+      .review-list dd {
+        margin: 0;
+        word-break: break-word;
+      }
+      @media (max-width: 640px) {
+        .form-page {
+          padding: 0.5rem;
+          max-width: 100%;
+        }
+        .review-list {
+          grid-template-columns: 1fr;
+        }
+        .review-list dt {
+          margin-top: 0.5rem;
+        }
+      }
     `,
   ],
 })
-export class IntakeLandingComponent implements OnInit {
+export class IntakeLandingComponent implements OnInit, OnDestroy {
   protected readonly store = inject(IntakeFormStore);
   protected readonly commonSymptoms = COMMON_SYMPTOMS;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected chiefComplaint = '';
   protected selectedSymptoms: string[] = [];
@@ -257,11 +361,26 @@ export class IntakeLandingComponent implements OnInit {
   protected medicationSuggestions = signal<string[]>([]);
   protected allergySuggestions = signal<string[]>([]);
   protected submitted = signal(false);
+  protected currentStep = signal(1);
+  private appointmentId: string | null = null;
+  private autoSaveTimer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
+    this.appointmentId = this.route.snapshot.queryParamMap.get('appointmentId');
     const loaded = this.store.loadDraft();
     if (loaded) {
       this.syncFromStore();
+    }
+    this.autoSaveTimer = setInterval(() => {
+      if (this.store.isDirty()) {
+        this.store.saveDraft(this.appointmentId ?? undefined);
+      }
+    }, 30_000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.autoSaveTimer !== null) {
+      clearInterval(this.autoSaveTimer);
     }
   }
 
@@ -282,13 +401,32 @@ export class IntakeLandingComponent implements OnInit {
   }
 
   protected saveDraft(): void {
-    this.store.saveDraft();
+    this.store.saveDraft(this.appointmentId ?? undefined);
   }
 
   protected submit(): void {
     this.submitted.set(true);
-    if (!this.chiefComplaint.trim()) return;
-    this.store.markSubmitted();
+    if (!this.chiefComplaint.trim()) {
+      this.currentStep.set(1);
+      return;
+    }
+    if (this.appointmentId) {
+      void this.store.submitToBackend(this.appointmentId, 'ManualForm').then(() => {
+        if (this.store.isSubmitted()) {
+          void this.router.navigate(['/intake/summary', this.appointmentId]);
+        }
+      });
+    } else {
+      this.store.markSubmitted();
+    }
+  }
+
+  protected nextStep(): void {
+    if (this.currentStep() < 3) this.currentStep.update((s) => s + 1);
+  }
+
+  protected prevStep(): void {
+    if (this.currentStep() > 1) this.currentStep.update((s) => s - 1);
   }
 
   private syncFromStore(): void {
