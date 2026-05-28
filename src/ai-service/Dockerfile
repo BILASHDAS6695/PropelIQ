@@ -24,7 +24,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Install production deps first for better layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir -r requirements.txt \
+ && pip install --no-cache-dir \
+      https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_ner_bc5cdr_md-0.5.4.tar.gz \
+      https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_ner_bionlp13cg_md-0.5.4.tar.gz
 
 # ─── Stage 3: development (uvicorn --reload + dev deps) ───────────────────────
 FROM deps AS development

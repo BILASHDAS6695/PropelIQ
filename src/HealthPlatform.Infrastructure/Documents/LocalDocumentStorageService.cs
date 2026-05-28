@@ -63,4 +63,23 @@ internal sealed class LocalDocumentStorageService : IDocumentStorageService
             _logger.LogInformation("Deleted orphaned document at {Path}", storagePath);
         }
     }
+
+    public async Task<Stream> ReadAsync(string storagePath, string encryptionIv, CancellationToken ct)
+    {
+        var fullPath  = Path.Combine(_settings.BasePath, storagePath);
+        var masterKey = Convert.FromBase64String(_settings.EncryptionKey);
+        var iv        = Convert.FromHexString(encryptionIv);
+
+        var cipherBytes = await File.ReadAllBytesAsync(fullPath, ct);
+
+        using var aes = Aes.Create();
+        aes.Key     = masterKey;
+        aes.IV      = iv;
+        aes.Mode    = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+
+        using var decryptor = aes.CreateDecryptor();
+        var plainBytes = decryptor.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
+        return new MemoryStream(plainBytes);
+    }
 }

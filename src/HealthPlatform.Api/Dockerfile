@@ -37,11 +37,20 @@ RUN dotnet publish HealthPlatform.Api/HealthPlatform.Api.csproj \
     --no-restore
 
 # ─── Stage 4: release (minimal runtime image) ─────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS release
+# Uses Debian-based aspnet image (not Alpine) because Tesseract.NET and PDFtoImage
+# bundle native glibc-linked binaries that are incompatible with Alpine musl libc.
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS release
 WORKDIR /app
 
+# Install Tesseract OCR and English language data for local OCR processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        tesseract-ocr \
+        tesseract-ocr-eng \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as non-root user (security hardening — OWASP A05)
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 COPY --from=build /app/publish .

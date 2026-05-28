@@ -25,6 +25,12 @@ public interface IDocumentStorageService
         CancellationToken ct);
 
     /// <summary>
+    /// Decrypts the stored file and returns a readable in-memory stream.
+    /// Caller is responsible for disposing the returned stream.
+    /// </summary>
+    Task<Stream> ReadAsync(string storagePath, string encryptionIv, CancellationToken ct);
+
+    /// <summary>
     /// Deletes the encrypted file at <paramref name="storagePath"/> (best-effort).
     /// Used for cleanup when DB persistence fails after a successful file write.
     /// </summary>

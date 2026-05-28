@@ -22,3 +22,28 @@ export type DocumentProcessingStatus =
   | 'Processed'
   | 'Verified'
   | 'Failed';
+
+export interface OcrPageResult {
+  pageNumber: number;
+  text: string;
+  confidenceScore: number;
+}
+
+export interface NerEntity {
+  text: string;
+  type: string;
+  startOffset: number;
+  endOffset: number;
+  confidenceScore: number;
+  lowConfidence: boolean;
+  pageNumber: number; // 1-based; 0 = unknown page (pre-US-048 data)
+}
+
+export interface DocumentOcrResultDto {
+  documentId: string;
+  fileName: string;
+  processingStatus: DocumentProcessingStatus;
+  ocrConfidenceScore: number | null;
+  pages: OcrPageResult[];
+  entities: NerEntity[];
+}

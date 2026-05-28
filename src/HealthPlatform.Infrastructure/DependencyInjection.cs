@@ -16,6 +16,7 @@ using HealthPlatform.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace HealthPlatform.Infrastructure;
@@ -124,6 +125,26 @@ public static class DependencyInjection
         services.Configure<DocumentStorageSettings>(
             configuration.GetSection(DocumentStorageSettings.SectionName));
         services.AddScoped<IDocumentStorageService, LocalDocumentStorageService>();
+
+        services.Configure<TesseractSettings>(
+            configuration.GetSection(TesseractSettings.SectionName));
+        services.AddScoped<IOcrService, TesseractOcrService>();
+        services.AddTransient<DocumentOcrJob>();
+        services.AddScoped<IOcrJobScheduler, HangfireOcrJobScheduler>();
+
+        // NER — AI service HTTP client + job scheduler
+        services.Configure<NerSettings>(configuration.GetSection(NerSettings.SectionName));
+
+        services.AddHttpClient<INerClient, AiServiceNerClient>((sp, client) =>
+        {
+            var settings = sp.GetRequiredService<IOptions<NerSettings>>().Value;
+            client.BaseAddress = new Uri(settings.AiServiceBaseUrl);
+            client.Timeout     = TimeSpan.FromSeconds(settings.TimeoutSeconds);
+            client.DefaultRequestHeaders.Add("X-Internal-Api-Key", settings.InternalApiKey);
+        });
+
+        services.AddTransient<DocumentNerJob>();
+        services.AddScoped<INerJobScheduler, HangfireNerJobScheduler>();
 
         return services;
     }
