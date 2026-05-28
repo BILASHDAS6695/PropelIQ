@@ -97,6 +97,16 @@ public static class DependencyInjection
         services.Configure<ReminderSettings>(
             configuration.GetSection(ReminderSettings.SectionName));
 
+        services.AddHttpClient("AiService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["AiService:BaseUrl"]
+                ?? "http://localhost:8000");
+            client.DefaultRequestHeaders.Add(
+                "X-Internal-Api-Key",
+                configuration["AiService:InternalApiKey"] ?? string.Empty);
+            client.Timeout = TimeSpan.FromSeconds(35);
+        });
+
         services.AddHealthChecks()
             .AddNpgSql(
                 configuration.GetConnectionString("DefaultConnection")!,

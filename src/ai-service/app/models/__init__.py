@@ -15,11 +15,15 @@ from app.models.extraction_models import (
     OcrResponse,
 )
 from app.models.intake_models import (
+    ChatRequest,
+    ChatResponse,
+    ConversationMessage,
     IntakeCategory,
     IntakeClassifyRequest,
     IntakeClassifyResponse,
     IntakeParseRequest,
     IntakeParseResponse,
+    IntakeSessionData,
 )
 
 __all__ = [
@@ -32,4 +36,6 @@ __all__ = [
     "IntakeCategory",
     "IntakeParseRequest", "IntakeParseResponse",
     "IntakeClassifyRequest", "IntakeClassifyResponse",
+    "ConversationMessage", "IntakeSessionData",
+    "ChatRequest", "ChatResponse",
 ]
