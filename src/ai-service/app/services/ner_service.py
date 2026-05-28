@@ -71,7 +71,7 @@ class NerService:
         """
         results: list[dict] = []
 
-        for page_text in pages:
+        for page_index, page_text in enumerate(pages):
             if not page_text or not page_text.strip():
                 continue
 
