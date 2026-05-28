@@ -129,39 +129,3 @@ public class IntakeController : ControllerBase
         return NoContent();
     }
 }
-
-    [HttpPost("chat")]
-    public async Task<ActionResult<IntakeChatProxyResponse>> Chat(
-        [FromBody] IntakeChatProxyRequest request,
-        CancellationToken cancellationToken)
-    {
-        var client = _httpClientFactory.CreateClient("AiService");
-        try
-        {
-            var aiResponse = await client.PostAsJsonAsync(
-                "/intake/chat", request, cancellationToken);
-
-            if (!aiResponse.IsSuccessStatusCode)
-            {
-                var status = (int)aiResponse.StatusCode;
-                _logger.LogWarning(
-                    "AI service returned {StatusCode} for intake/chat", status);
-                return StatusCode(status, new { detail = "Upstream AI service error." });
-            }
-
-            var result = await aiResponse.Content
-                .ReadFromJsonAsync<IntakeChatProxyResponse>(cancellationToken: cancellationToken);
-            return Ok(result);
-        }
-        catch (TaskCanceledException)
-        {
-            _logger.LogError("AI service timeout on intake/chat");
-            return StatusCode(504, new { detail = "AI service timed out." });
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "AI service unreachable on intake/chat");
-            return StatusCode(503, new { detail = "AI service unavailable." });
-        }
-    }
-}
