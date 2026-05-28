@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
 import redis.asyncio as aioredis
+from fastapi import APIRouter, HTTPException
 
 from app.config import settings
 from app.models import (
