@@ -32,6 +32,7 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<ProviderScheduleRule>   ProviderScheduleRules   => Set<ProviderScheduleRule>();
     public DbSet<ProviderUnavailability> ProviderUnavailabilities => Set<ProviderUnavailability>();
     public DbSet<SlotSwapRequest>        SlotSwapRequests         => Set<SlotSwapRequest>();
+    public DbSet<PdfReport>              PdfReports               => Set<PdfReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
