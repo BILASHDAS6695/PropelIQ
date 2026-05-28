@@ -4,7 +4,7 @@ import structlog
 from fastapi import APIRouter, HTTPException
 
 from app.config import settings
-from app.models import NerRequest, NerResponse, OcrRequest, OcrResponse
+from app.models import EntitySpan, NerRequest, NerResponse, OcrRequest, OcrResponse
 from app.services.ner_service import NerService
 
 router = APIRouter()
@@ -52,5 +52,5 @@ async def extract_ner(request: NerRequest) -> NerResponse:
         raise HTTPException(status_code=500, detail="NER extraction failed.") from exc
 
     logger.info("ner_extraction_complete", entity_count=len(raw_entities))
-    return NerResponse(entities=raw_entities)
+    return NerResponse(entities=[EntitySpan(**e) for e in raw_entities])
 
