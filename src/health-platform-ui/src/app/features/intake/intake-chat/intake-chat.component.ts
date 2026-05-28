@@ -15,12 +15,21 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { IntakeChatStore } from '../intake-chat.store';
+import { IntakeModeToggleComponent } from '../intake-mode-toggle/intake-mode-toggle.component';
 
 @Component({
   selector: 'app-intake-chat',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, SkeletonModule, TagModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    InputTextModule,
+    SkeletonModule,
+    TagModule,
+    IntakeModeToggleComponent,
+  ],
   styles: [
     `
       .chat-page {
@@ -87,6 +96,7 @@ import { IntakeChatStore } from '../intake-chat.store';
   ],
   template: `
     <div class="chat-page">
+      <app-intake-mode-toggle />
       <h2 class="text-xl font-semibold mb-3">
         <i class="pi pi-comments mr-2"></i>Pre-Visit Intake
       </h2>
