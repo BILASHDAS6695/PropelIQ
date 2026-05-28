@@ -217,4 +217,3 @@ export class DocumentsComponent implements OnInit {
     return `${(bytes / 1_048_576).toFixed(1)} MB`;
   }
 }
-
