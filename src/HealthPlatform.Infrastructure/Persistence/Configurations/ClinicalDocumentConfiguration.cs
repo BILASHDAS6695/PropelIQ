@@ -18,6 +18,7 @@ internal sealed class ClinicalDocumentConfiguration : IEntityTypeConfiguration<C
 
         builder.Property(cd => cd.ExtractedText).HasColumnType("jsonb");
         builder.Property(cd => cd.OcrConfidenceScore);
+        builder.Property(cd => cd.Entities).HasColumnType("jsonb");
 
         builder.Property(cd => cd.ProcessingStatus)
             .HasConversion<string>()

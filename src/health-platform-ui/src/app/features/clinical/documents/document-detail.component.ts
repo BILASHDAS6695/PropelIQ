@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, PercentPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
@@ -7,8 +7,9 @@ import { CardModule } from 'primeng/card';
 import { PanelModule } from 'primeng/panel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 import { AuthStore } from '../../../core/auth/auth.store';
-import type { DocumentOcrResultDto } from '../../../core/models/document.models';
+import type { DocumentOcrResultDto, NerEntity } from '../../../core/models/document.models';
 import { DocumentService } from '../../../core/services/document.service';
 
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
@@ -24,7 +25,7 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
 @Component({
   selector: 'app-document-detail',
   standalone: true,
-  imports: [ButtonModule, CardModule, DecimalPipe, PanelModule, SkeletonModule, TagModule, RouterLink],
+  imports: [ButtonModule, CardModule, DecimalPipe, PercentPipe, PanelModule, SkeletonModule, TagModule, TooltipModule, RouterLink],
   template: `
     <div style="max-width: 900px; margin: 0 auto" class="p-3">
       <!-- Back navigation -->
@@ -125,6 +126,36 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
               <p>No text was extracted from this document.</p>
             </div>
           }
+
+          <!-- Named Entities -->
+          @if (document()!.entities.length > 0) {
+            <div class="mt-4">
+              <h2 class="text-lg font-semibold mb-2">Extracted Clinical Entities</h2>
+              @for (entry of objectEntries(entityGroups()); track entry[0]) {
+                <div class="mb-3">
+                  <span class="text-sm font-semibold text-color-secondary uppercase tracking-wide">
+                    {{ entry[0] }}
+                  </span>
+                  <div class="flex flex-wrap gap-2 mt-1">
+                    @for (entity of entry[1]; track entity.startOffset) {
+                      <span
+                        class="inline-flex align-items-center gap-1 border-round px-2 py-1 text-sm"
+                        [class.surface-100]="!entity.lowConfidence"
+                        [class.surface-200]="entity.lowConfidence"
+                        [pTooltip]="'Confidence: ' + (entity.confidenceScore | percent: '1.0-0') + (entity.lowConfidence ? ' (low)' : '')"
+                        tooltipPosition="top"
+                      >
+                        {{ entity.text }}
+                        @if (entity.lowConfidence) {
+                          <i class="pi pi-exclamation-triangle text-yellow-500" style="font-size: 0.7rem"></i>
+                        }
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
         </div>
       }
     </div>
@@ -138,6 +169,8 @@ export class DocumentDetailComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly document = signal<DocumentOcrResultDto | null>(null);
+  readonly entityGroups = signal<Record<string, NerEntity[]>>({});
+  readonly objectEntries = Object.entries;
 
   ngOnInit(): void {
     this.load();
@@ -159,6 +192,7 @@ export class DocumentDetailComponent implements OnInit {
     this.docSvc.getDocumentOcrResult(patientId, documentId).subscribe({
       next: (result) => {
         this.document.set(result);
+        this.entityGroups.set(this.groupByType(result.entities));
         this.loading.set(false);
       },
       error: () => {
@@ -170,5 +204,15 @@ export class DocumentDetailComponent implements OnInit {
 
   getSeverity(status: string): TagSeverity {
     return STATUS_SEVERITY[status] ?? 'secondary';
+  }
+
+  private groupByType(entities: NerEntity[]): Record<string, NerEntity[]> {
+    return entities.reduce(
+      (acc, e) => {
+        (acc[e.type] ??= []).push(e);
+        return acc;
+      },
+      {} as Record<string, NerEntity[]>,
+    );
   }
 }

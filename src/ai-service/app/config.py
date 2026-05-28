@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     # Redis (session store)
     redis_url: str = "redis://localhost:6379/0"
 
+    # NER — scispaCy models (TR-027 / ADR-004)
+    ner_confidence_threshold: float = 0.7
+    ner_chunk_size: int = 10_000   # max chars per text chunk
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

@@ -32,6 +32,12 @@ public class ClinicalDocument : AuditableEntity
     /// </summary>
     public double? OcrConfidenceScore { get; set; }
 
+    /// <summary>
+    /// JSON array of NerEntity objects extracted by the NER pipeline.
+    /// Null until NER job completes. Stored as a PostgreSQL JSONB column.
+    /// </summary>
+    public string? Entities { get; set; }
+
     public PatientProfile Patient { get; set; } = null!;
     public ICollection<ExtractedData> ExtractedData { get; set; } = [];
 }

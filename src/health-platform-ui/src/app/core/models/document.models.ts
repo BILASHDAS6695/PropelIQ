@@ -29,10 +29,20 @@ export interface OcrPageResult {
   confidenceScore: number;
 }
 
+export interface NerEntity {
+  text: string;
+  type: string;
+  startOffset: number;
+  endOffset: number;
+  confidenceScore: number;
+  lowConfidence: boolean;
+}
+
 export interface DocumentOcrResultDto {
   documentId: string;
   fileName: string;
   processingStatus: DocumentProcessingStatus;
   ocrConfidenceScore: number | null;
   pages: OcrPageResult[];
+  entities: NerEntity[];
 }

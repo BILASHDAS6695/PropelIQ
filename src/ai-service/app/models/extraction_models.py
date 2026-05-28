@@ -47,17 +47,38 @@ class OcrResponse(BaseModel):
 class NerRequest(BaseModel):
     """Request body for POST /extraction/ner."""
 
-    text: str = Field(..., description="Plain text to run NER over.", min_length=1)
+    pages: list[str] = Field(
+        ...,
+        description="List of plain-text page strings from OCR output.",
+        min_length=1,
+    )
+    confidence_threshold: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Entities with score below this value are flagged low_confidence.",
+    )
 
 
 class EntitySpan(BaseModel):
-    label: str = Field(description="Entity label (e.g., CONDITION, MEDICATION).")
-    text: str = Field(description="Surface text of the entity.")
-    start: int = Field(description="Character start offset.")
-    end: int = Field(description="Character end offset.")
+    """A single recognised clinical entity."""
+
+    text: str = Field(description="Surface text as it appears in the source.")
+    type: str = Field(
+        description=(
+            "Normalised entity type: DIAGNOSIS | MEDICATION | PROCEDURE | "
+            "LAB_TEST | LAB_VALUE | ANATOMY | SYMPTOM."
+        )
+    )
+    start_offset: int = Field(description="Zero-based char start in the page text.")
+    end_offset: int = Field(description="Zero-based char end (exclusive) in the page text.")
+    confidence_score: float = Field(description="Model confidence 0.0–1.0.")
+    low_confidence: bool = Field(
+        description="True when confidence_score < the request threshold."
+    )
 
 
 class NerResponse(BaseModel):
     """Response body for POST /extraction/ner."""
 
-    entities: list[EntitySpan] = Field(description="Detected entity spans.")
+    entities: list[EntitySpan] = Field(description="All detected entity spans.")
