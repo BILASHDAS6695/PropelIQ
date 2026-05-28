@@ -21,6 +21,7 @@ import { CalendarStore, CalendarViewMode } from './calendar.store';
 import { CalendarAppointmentDto } from '../../core/models/calendar.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { BookingService } from '../../core/services/booking.service';
+import { IcsService } from '../../core/services/ics.service';
 
 type StatusSeverity = 'info' | 'success' | 'danger' | 'secondary' | 'warn' | 'contrast';
 
@@ -331,6 +332,14 @@ interface ProviderOption {
               <div>{{ appt.visitReason }}</div>
             </div>
           }
+          <p-button
+            label="Add to Calendar"
+            severity="secondary"
+            [outlined]="true"
+            icon="pi pi-calendar-plus"
+            styleClass="w-full"
+            (onClick)="addToCalendar(appt)"
+          />
           @if (canCancel(appt.status)) {
             <p-button
               label="Cancel Appointment"
@@ -361,6 +370,7 @@ export class CalendarViewComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly bookingSvc = inject(BookingService);
+  private readonly ics = inject(IcsService);
 
   protected readonly isMobile = signal(window.innerWidth <= 768);
   protected drawerVisible = false;
@@ -500,6 +510,11 @@ export class CalendarViewComponent implements OnInit {
 
   protected canReschedule(status: string): boolean {
     return status === 'Scheduled' || status === 'Booked';
+  }
+
+  protected addToCalendar(appt: CalendarAppointmentDto): void {
+    const content = this.ics.buildSingle(appt);
+    this.ics.download(`appointment-${appt.appointmentId}`, content);
   }
 
   protected statusSeverity(

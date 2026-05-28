@@ -10,6 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { AppointmentCardComponent } from '../appointment-card/appointment-card.component';
 import { BookingStore } from '../booking.store';
 import { AppointmentItemDto, AppointmentStatus } from '../../../core/models/booking.models';
+import { IcsService } from '../../../core/services/ics.service';
 
 const UPCOMING_STATUSES: string[] = [AppointmentStatus.Scheduled, AppointmentStatus.Booked];
 
@@ -39,12 +40,24 @@ const PAST_STATUSES: string[] = [
     <div class="my-appointments p-3" style="max-width:800px;margin:0 auto">
       <div class="flex justify-content-between align-items-center mb-4">
         <h1 class="text-2xl font-semibold m-0">My Appointments</h1>
-        <p-button
-          label="Book New"
-          icon="pi pi-plus"
-          size="small"
-          (onClick)="router.navigate(['/booking'])"
-        />
+        <div class="flex gap-2">
+          @if (upcomingCount() > 0) {
+            <p-button
+              label="Export All"
+              icon="pi pi-download"
+              severity="secondary"
+              size="small"
+              [outlined]="true"
+              (onClick)="exportAllToCalendar()"
+            />
+          }
+          <p-button
+            label="Book New"
+            icon="pi pi-plus"
+            size="small"
+            (onClick)="router.navigate(['/booking'])"
+          />
+        </div>
       </div>
 
       @if (store.isLoading()) {
@@ -84,6 +97,7 @@ const PAST_STATUSES: string[] = [
                   <app-appointment-card
                     [appointment]="appt"
                     [showCancel]="true"
+                    [showAddToCalendar]="true"
                     (cancelRequest)="openCancelDialog($event)"
                   />
                 }
@@ -98,7 +112,7 @@ const PAST_STATUSES: string[] = [
                 </div>
               } @else {
                 @for (appt of pastAppointments(); track appt.appointmentId) {
-                  <app-appointment-card [appointment]="appt" />
+                  <app-appointment-card [appointment]="appt" [showAddToCalendar]="true" />
                 }
               }
             </p-tabpanel>
@@ -148,6 +162,7 @@ const PAST_STATUSES: string[] = [
 export class MyAppointmentsComponent implements OnInit {
   readonly store = inject(BookingStore);
   readonly router = inject(Router);
+  private readonly ics = inject(IcsService);
 
   readonly activeTab = signal<string>('upcoming');
   readonly skeletonItems = [1, 2, 3];
@@ -174,6 +189,11 @@ export class MyAppointmentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.store.loadMyAppointments();
+  }
+
+  exportAllToCalendar(): void {
+    const content = this.ics.buildBulk(this.upcomingAppointments());
+    this.ics.download('my-appointments', content);
   }
 
   openCancelDialog(appointment: AppointmentItemDto): void {

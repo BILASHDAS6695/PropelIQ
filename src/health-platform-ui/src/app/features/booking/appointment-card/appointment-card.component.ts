@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { AppointmentItemDto, AppointmentStatus } from '../../../core/models/booking.models';
+import { IcsService } from '../../../core/services/ics.service';
 
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
@@ -54,6 +55,16 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contr
               (onClick)="rescheduleRequest.emit(appointment)"
             />
           }
+          @if (showAddToCalendar) {
+            <p-button
+              label="Add to Calendar"
+              severity="secondary"
+              size="small"
+              icon="pi pi-calendar-plus"
+              [outlined]="true"
+              (onClick)="downloadIcs(appointment)"
+            />
+          }
         </div>
       </div>
     </p-card>
@@ -63,9 +74,17 @@ export class AppointmentCardComponent {
   @Input({ required: true }) appointment!: AppointmentItemDto;
   @Input() showCancel = false;
   @Input() showReschedule = false;
+  @Input() showAddToCalendar = false;
 
   @Output() cancelRequest = new EventEmitter<AppointmentItemDto>();
   @Output() rescheduleRequest = new EventEmitter<AppointmentItemDto>();
+
+  private readonly ics = inject(IcsService);
+
+  downloadIcs(appt: AppointmentItemDto): void {
+    const content = this.ics.buildSingle(appt);
+    this.ics.download(`appointment-${appt.appointmentId}`, content);
+  }
 
   statusLabel(status: AppointmentStatus | string): string {
     const labels: Record<string, string> = {

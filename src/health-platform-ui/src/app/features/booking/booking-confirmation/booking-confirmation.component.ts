@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { BookingConfirmationDto } from '../../../core/models/booking.models';
+import { IcsService } from '../../../core/services/ics.service';
 import { BookingStore } from '../booking.store';
 
 @Component({
@@ -26,13 +28,13 @@ import { BookingStore } from '../booking.store';
         </div>
 
         <div class="flex justify-content-center gap-2 flex-wrap">
-          <a
-            [href]="icsDataUri(c.appointmentTime, c.providerName)"
-            [download]="'appointment-' + c.appointmentId + '.ics'"
-            class="p-button p-component p-button-outlined"
-          >
-            <i class="pi pi-calendar-plus mr-2"></i>Add to Calendar
-          </a>
+          <p-button
+            label="Add to Calendar"
+            icon="pi pi-calendar-plus"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="addToCalendar(c)"
+          />
           <p-button label="Book Another" icon="pi pi-plus" (onClick)="bookAnother.emit()" />
         </div>
       }
@@ -43,25 +45,17 @@ export class BookingConfirmationComponent {
   @Output() bookAnother = new EventEmitter<void>();
 
   readonly store = inject(BookingStore);
+  readonly ics = inject(IcsService);
 
-  icsDataUri(appointmentTime: string, providerName: string): string {
-    const start = new Date(appointmentTime);
+  addToCalendar(c: BookingConfirmationDto): void {
+    const start = new Date(c.appointmentTime);
     const end = new Date(start.getTime() + 30 * 60 * 1000);
-    const fmt = (d: Date) =>
-      d
-        .toISOString()
-        .replace(/[-:]/g, '')
-        .replace(/\.\d{3}/, '');
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'BEGIN:VEVENT',
-      `DTSTART:${fmt(start)}`,
-      `DTEND:${fmt(end)}`,
-      `SUMMARY:Appointment with ${providerName}`,
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-    return `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
+    const content = this.ics.buildSingle({
+      appointmentId: c.appointmentId,
+      providerName: c.providerName,
+      slotTime: start.toISOString(),
+      endTime: end.toISOString(),
+    });
+    this.ics.download(`appointment-${c.appointmentId}`, content);
   }
 }
