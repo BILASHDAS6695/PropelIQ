@@ -15,6 +15,7 @@ internal sealed class ProcessDocumentOcrCommandHandler : IRequestHandler<Process
     private readonly IDocumentStorageService                   _storage;
     private readonly IOcrService                               _ocr;
     private readonly TesseractSettings                         _settings;
+    private readonly INerJobScheduler                          _nerScheduler;
     private readonly ILogger<ProcessDocumentOcrCommandHandler> _logger;
 
     public ProcessDocumentOcrCommandHandler(
@@ -22,13 +23,15 @@ internal sealed class ProcessDocumentOcrCommandHandler : IRequestHandler<Process
         IDocumentStorageService                   storage,
         IOcrService                               ocr,
         IOptions<TesseractSettings>               settings,
+        INerJobScheduler                          nerScheduler,
         ILogger<ProcessDocumentOcrCommandHandler> logger)
     {
-        _uow      = uow;
-        _storage  = storage;
-        _ocr      = ocr;
-        _settings = settings.Value;
-        _logger   = logger;
+        _uow          = uow;
+        _storage      = storage;
+        _ocr          = ocr;
+        _settings     = settings.Value;
+        _nerScheduler = nerScheduler;
+        _logger       = logger;
     }
 
     public async Task Handle(ProcessDocumentOcrCommand command, CancellationToken ct)
@@ -70,10 +73,10 @@ internal sealed class ProcessDocumentOcrCommandHandler : IRequestHandler<Process
             {
                 document.ExtractedText      = JsonSerializer.Serialize(pages);
                 document.OcrConfidenceScore = avgConfidence;
-                document.ProcessingStatus   = DocumentProcessingStatus.Processed;
+                // ProcessingStatus intentionally stays Processing — NER job sets Processed.
 
                 _logger.LogInformation(
-                    "OCR completed for document {DocumentId}. Pages={PageCount}, Confidence={Score:F1}%.",
+                    "OCR completed for document {DocumentId}. Pages={PageCount}, Confidence={Score:F1}%. Enqueueing NER.",
                     command.DocumentId, pages.Count, avgConfidence);
             }
         }
@@ -84,5 +87,12 @@ internal sealed class ProcessDocumentOcrCommandHandler : IRequestHandler<Process
         }
 
         await _uow.SaveChangesAsync(ct);
+
+        // Enqueue NER only when OCR succeeded (status still Processing after save).
+        if (document.ProcessingStatus == DocumentProcessingStatus.Processing
+            && !string.IsNullOrEmpty(document.ExtractedText))
+        {
+            _nerScheduler.Enqueue(document.Id);
+        }
     }
 }

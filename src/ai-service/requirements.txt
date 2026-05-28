@@ -3,6 +3,10 @@ uvicorn[standard]==0.29.0
 pydantic==2.7.1
 pydantic-settings==2.2.1
 spacy==3.7.4
+scispacy==0.5.4
+# scispaCy biomedical models (installed via pip URLs — see Dockerfile)
+# en_ner_bc5cdr_md — Chemical/Disease NER
+# en_ner_bionlp13cg_md — Anatomy/Cell-biology NER
 pytesseract==0.3.10
 pymupdf==1.24.3
 python-multipart==0.0.9

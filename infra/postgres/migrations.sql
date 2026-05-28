@@ -623,3 +623,17 @@ BEGIN
             ADD COLUMN ocr_confidence_score double precision NULL;
     END IF;
 END $EF$;
+
+-- US-047: NER Pipeline — add entities (JSONB) to clinical_documents
+-- ============================================================
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'clinical_documents' AND column_name = 'entities'
+    ) THEN
+        ALTER TABLE clinical_documents
+            ADD COLUMN entities jsonb NULL;
+    END IF;
+END $EF$;

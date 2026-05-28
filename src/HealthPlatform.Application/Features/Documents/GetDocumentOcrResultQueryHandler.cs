@@ -51,6 +51,14 @@ internal sealed class GetDocumentOcrResultQueryHandler
                 document.ExtractedText) ?? [];
         }
 
+        // 4. Deserialise stored NER entities (null-safe)
+        IReadOnlyList<NerEntity> entities = [];
+        if (!string.IsNullOrEmpty(document.Entities))
+        {
+            entities = JsonSerializer.Deserialize<IReadOnlyList<NerEntity>>(
+                document.Entities) ?? [];
+        }
+
         _logger.LogInformation(
             "OCR result fetched for document {DocumentId}, patient profile {ProfileId}.",
             query.DocumentId, profileId);
@@ -60,6 +68,7 @@ internal sealed class GetDocumentOcrResultQueryHandler
             document.FileName,
             document.ProcessingStatus.ToString(),
             document.OcrConfidenceScore,
-            pages);
+            pages,
+            entities);
     }
 }
