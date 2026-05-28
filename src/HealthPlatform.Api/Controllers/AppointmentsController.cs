@@ -1,6 +1,7 @@
 using HealthPlatform.Api.Authorization;
 using HealthPlatform.Api.Hubs;
 using HealthPlatform.Application.Features.Appointments;
+using HealthPlatform.Application.Features.Intake;
 using HealthPlatform.Application.Features.SlotSwap;
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Domain.Enums;
@@ -291,10 +292,11 @@ public sealed class AppointmentsController : ControllerBase
         [FromQuery] Guid?   providerId,
         [FromQuery] string? patientName,
         [FromQuery] Guid?   appointmentId,
+        [FromQuery] bool?   hasIntakePending,
         CancellationToken   ct)
     {
         var results = await _sender.Send(
-            new TodayAppointmentsSearchQuery(providerId, patientName, appointmentId), ct);
+            new TodayAppointmentsSearchQuery(providerId, patientName, appointmentId, hasIntakePending), ct);
         return Ok(results);
     }
 
@@ -579,6 +581,26 @@ public sealed class AppointmentsController : ControllerBase
             new GetCalendarAppointmentsQuery(dateFrom, dateTo, providerId), ct);
 
         return Ok(results);
+    }
+
+    /// <summary>
+    /// Returns whether the intake form window is currently open for the given appointment.
+    /// </summary>
+    /// <param name="id">The appointment ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>
+    /// 200 OK — <c>{ isOpen: bool, reason: string | null }</c>.<br/>
+    /// 404 Not Found — appointment does not exist.
+    /// </returns>
+    [HttpGet("{id:guid}/intake-window")]
+    [Authorize]
+    public async Task<IActionResult> GetIntakeWindow(Guid id, CancellationToken ct)
+    {
+        var result = await _sender.Send(new GetIntakeWindowQuery(id), ct);
+        if (result is null)
+            return NotFound();
+
+        return Ok(new { result.IsOpen, result.Reason });
     }
 }
 

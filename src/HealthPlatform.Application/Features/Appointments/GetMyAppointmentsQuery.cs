@@ -13,4 +13,6 @@ public sealed record PatientAppointmentDto(
     DateTimeOffset EndTime,
     string         Status,
     string?        VisitReason,
-    string         PatientName);
+    string         PatientName,
+    string?        IntakeStatus,
+    bool           IsIntakeWindowOpen);

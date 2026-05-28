@@ -44,7 +44,8 @@ internal sealed class TodayAppointmentsSearchSpecification : ISpecification<Appo
 
     public List<Expression<Func<Appointment, object>>> Includes =>
     [
-        a => a.Patient
+        a => a.Patient,
+        a => a.IntakeRecord!,
     ];
 
     public Expression<Func<Appointment, object>>?      OrderBy           => a => a.SlotTime;
