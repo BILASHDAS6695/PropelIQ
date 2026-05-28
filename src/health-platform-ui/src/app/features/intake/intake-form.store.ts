@@ -1,6 +1,13 @@
 import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
-import { IntakeFormData, IntakeFormDraft } from '../../core/models/intake.models';
+import { firstValueFrom } from 'rxjs';
+import {
+  IntakeFormData,
+  IntakeFormDraft,
+  IntakeMode,
+  IntakeSubmitRequest,
+} from '../../core/models/intake.models';
+import { IntakeService } from '../../core/services/intake.service';
 import { ToastService } from '../../shared/services/toast.service';
 
 export const MEDICATION_SUGGESTIONS = [
@@ -81,7 +88,7 @@ export const IntakeFormStore = signalStore(
       return Math.round((filled / 6) * 100);
     }),
   })),
-  withMethods((store, toast = inject(ToastService)) => ({
+  withMethods((store, toast = inject(ToastService), intakeService = inject(IntakeService)) => ({
     patch(partial: Partial<IntakeFormData>): void {
       patchState(store, { form: { ...store.form(), ...partial }, isDirty: true });
     },
@@ -164,6 +171,31 @@ export const IntakeFormStore = signalStore(
 
     reset(): void {
       patchState(store, initialState);
+    },
+
+    async submitToBackend(appointmentId: string, mode: IntakeMode): Promise<void> {
+      const req: IntakeSubmitRequest = { appointmentId, mode, data: store.form() };
+      try {
+        await firstValueFrom(intakeService.submitIntake(req));
+        patchState(store, { isSubmitted: true });
+        localStorage.removeItem(DRAFT_KEY);
+        toast.success('Intake submitted', 'Your intake form has been submitted successfully.');
+      } catch {
+        toast.error('Submission failed', 'Unable to submit intake. Please try again.');
+      }
+    },
+
+    async saveDraftToBackend(appointmentId: string, mode: IntakeMode): Promise<void> {
+      const req: IntakeSubmitRequest = { appointmentId, mode, data: store.form() };
+      try {
+        await firstValueFrom(intakeService.saveDraft(req));
+        const draft: IntakeFormDraft = { data: store.form(), savedAt: Date.now(), appointmentId };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        patchState(store, { isDirty: false });
+        toast.success('Draft saved', 'Your intake progress has been saved.');
+      } catch {
+        toast.error('Save failed', 'Unable to save draft. Please try again.');
+      }
     },
   })),
 );
