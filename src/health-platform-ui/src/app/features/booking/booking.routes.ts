@@ -18,4 +18,11 @@ export const BOOKING_ROUTES: Routes = [
     loadComponent: () =>
       import('../calendar/calendar-view.component').then((m) => m.CalendarViewComponent),
   },
+  {
+    path: 'staff-schedule',
+    loadComponent: () =>
+      import('../multi-provider/multi-provider-day.component').then(
+        (m) => m.MultiProviderDayComponent,
+      ),
+  },
 ];
