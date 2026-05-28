@@ -7,12 +7,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 from app.models.intake_models import IntakeSessionData
 from app.services.intake_orchestration_service import IntakeOrchestrationService
 from app.services.session_manager import SessionManager
 
-API_KEY_HEADER = {"X-Internal-Api-Key": "test-key"}
+# Use whatever key the server is configured with — avoids hardcoded mismatch on CI.
+API_KEY_HEADER = {"X-Internal-Api-Key": settings.internal_api_key}
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +107,6 @@ def test_chat_endpoint_new_session_returns_opening() -> None:
             "app.routers.intake._session_manager.save",
             new=AsyncMock(),
         ),
-        patch.dict("os.environ", {"INTERNAL_API_KEY": "test-key"}),
     ):
         client = TestClient(app)
         resp = client.post(
