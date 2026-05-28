@@ -1,5 +1,6 @@
 using HealthPlatform.Domain.Common;
 using HealthPlatform.Domain.Enums;
+using HealthPlatform.Domain.ValueObjects;
 
 namespace HealthPlatform.Domain.Entities;
 
@@ -38,4 +39,7 @@ public class User : AuditableEntity
     public PatientProfile? PatientProfile { get; set; }
     public ICollection<AuditLog> AuditLogs { get; set; } = [];
     public ICollection<Notification> Notifications { get; set; } = [];
+
+    // ── Notification preferences ──────────────────────────────────────────
+    public NotificationPreferences NotificationPreferences { get; set; } = new();
 }

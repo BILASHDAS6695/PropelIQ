@@ -13,13 +13,18 @@ namespace HealthPlatform.Api.Notifications;
 /// </summary>
 internal sealed class SignalRInAppNotifier : IInAppNotifier
 {
-    private readonly IHubContext<NotificationHub> _hub;
-    private readonly IUnitOfWork                 _uow;
+    private readonly IHubContext<NotificationHub>   _hub;
+    private readonly IUnitOfWork                   _uow;
+    private readonly INotificationPreferenceChecker _prefChecker;
 
-    public SignalRInAppNotifier(IHubContext<NotificationHub> hub, IUnitOfWork uow)
+    public SignalRInAppNotifier(
+        IHubContext<NotificationHub>    hub,
+        IUnitOfWork                     uow,
+        INotificationPreferenceChecker  prefChecker)
     {
-        _hub = hub;
-        _uow = uow;
+        _hub         = hub;
+        _uow         = uow;
+        _prefChecker = prefChecker;
     }
 
     /// <summary>Returns the SignalR group name for the given user.</summary>
@@ -35,6 +40,9 @@ internal sealed class SignalRInAppNotifier : IInAppNotifier
         string?           actionUrl = null,
         CancellationToken ct        = default)
     {
+        if (!await _prefChecker.IsAllowedAsync(userId, NotificationChannel.InApp, type, ct))
+            return;
+
         var now = DateTimeOffset.UtcNow;
 
         var notification = new Notification

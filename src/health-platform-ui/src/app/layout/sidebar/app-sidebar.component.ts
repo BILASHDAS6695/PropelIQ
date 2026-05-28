@@ -102,6 +102,7 @@ export class AppSidebarComponent {
     { label: 'My Appointments', icon: 'pi-calendar', route: '/booking/appointments' },
     { label: 'Intake', icon: 'pi-comments', route: '/intake' },
     { label: 'Documents', icon: 'pi-file', route: '/clinical' },
+    { label: 'Notifications', icon: 'pi-sliders-h', route: '/notification-preferences' },
     { label: 'Admin', icon: 'pi-cog', route: '/admin' },
   ];
 }

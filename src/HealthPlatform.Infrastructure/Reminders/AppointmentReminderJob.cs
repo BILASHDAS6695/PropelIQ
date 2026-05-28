@@ -16,20 +16,23 @@ namespace HealthPlatform.Infrastructure.Reminders;
 /// </summary>
 internal sealed class AppointmentReminderJob
 {
-    private readonly IUnitOfWork                     _uow;
-    private readonly IEmailSender                    _emailSender;
-    private readonly IInAppNotifier                  _inAppNotifier;
-    private readonly ILogger<AppointmentReminderJob> _logger;
+    private readonly IUnitOfWork                      _uow;
+    private readonly IEmailSender                     _emailSender;
+    private readonly IInAppNotifier                   _inAppNotifier;
+    private readonly INotificationPreferenceChecker   _prefChecker;
+    private readonly ILogger<AppointmentReminderJob>  _logger;
 
     public AppointmentReminderJob(
         IUnitOfWork                     uow,
         IEmailSender                    emailSender,
         IInAppNotifier                  inAppNotifier,
+        INotificationPreferenceChecker  prefChecker,
         ILogger<AppointmentReminderJob> logger)
     {
         _uow           = uow;
         _emailSender   = emailSender;
         _inAppNotifier = inAppNotifier;
+        _prefChecker   = prefChecker;
         _logger        = logger;
     }
 
@@ -76,7 +79,11 @@ internal sealed class AppointmentReminderJob
             appointmentId,
             email);
 
-        await _emailSender.SendAsync(email, subject, body, ct);
+        if (await _prefChecker.IsAllowedAsync(
+                appointment.Patient.UserId, NotificationChannel.Email, NotificationType.Reminder, ct))
+        {
+            await _emailSender.SendAsync(email, subject, body, ct);
+        }
 
         await _inAppNotifier.NotifyAsync(
             appointment.Patient.UserId,

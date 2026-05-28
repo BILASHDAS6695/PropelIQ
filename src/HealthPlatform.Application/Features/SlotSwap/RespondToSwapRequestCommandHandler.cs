@@ -15,6 +15,7 @@ internal sealed class RespondToSwapRequestCommandHandler
     private readonly ICurrentUserService                          _currentUser;
     private readonly IEmailSender                                 _email;
     private readonly IInAppNotifier                               _inAppNotifier;
+    private readonly INotificationPreferenceChecker               _prefChecker;
     private readonly ILogger<RespondToSwapRequestCommandHandler>  _logger;
 
     public RespondToSwapRequestCommandHandler(
@@ -22,12 +23,14 @@ internal sealed class RespondToSwapRequestCommandHandler
         ICurrentUserService                           currentUser,
         IEmailSender                                  email,
         IInAppNotifier                                inAppNotifier,
+        INotificationPreferenceChecker                prefChecker,
         ILogger<RespondToSwapRequestCommandHandler>   logger)
     {
         _uow           = uow;
         _currentUser   = currentUser;
         _email         = email;
         _inAppNotifier = inAppNotifier;
+        _prefChecker   = prefChecker;
         _logger        = logger;
     }
 
@@ -135,20 +138,24 @@ internal sealed class RespondToSwapRequestCommandHandler
             }, ct);
 
             if (requesterUser is not null)
-                await _email.SendAsync(
-                    requesterUser.Email,
-                    "Slot swap accepted — your appointment time has changed",
-                    $"Your slot swap request was accepted. " +
-                    $"Your new appointment time is {requesterAppt.SlotTime:f} UTC.",
-                    ct);
+                if (await _prefChecker.IsAllowedAsync(
+                        swapRequest.RequesterPatient.UserId, NotificationChannel.Email, NotificationType.SwapResult, ct))
+                    await _email.SendAsync(
+                        requesterUser.Email,
+                        "Slot swap accepted \u2014 your appointment time has changed",
+                        $"Your slot swap request was accepted. " +
+                        $"Your new appointment time is {requesterAppt.SlotTime:f} UTC.",
+                        ct);
 
             if (targetUser is not null)
-                await _email.SendAsync(
-                    targetUser.Email,
-                    "Slot swap confirmed — your appointment time has changed",
-                    $"You accepted a slot swap. " +
-                    $"Your new appointment time is {targetAppt.SlotTime:f} UTC.",
-                    ct);
+                if (await _prefChecker.IsAllowedAsync(
+                        callerPatient.UserId, NotificationChannel.Email, NotificationType.SwapResult, ct))
+                    await _email.SendAsync(
+                        targetUser.Email,
+                        "Slot swap confirmed \u2014 your appointment time has changed",
+                        $"You accepted a slot swap. " +
+                        $"Your new appointment time is {targetAppt.SlotTime:f} UTC.",
+                        ct);
 
             _logger.LogInformation(
                 "Swap request {SwapId} accepted. Requester appt {ReqId} ↔ Target appt {TgtId}",
@@ -176,10 +183,12 @@ internal sealed class RespondToSwapRequestCommandHandler
             }, ct);
 
             if (requesterUser is not null)
-                await _email.SendAsync(
-                    requesterUser.Email,
-                    "Slot swap declined",
-                    "Your slot swap request was declined by the other patient.",
+                if (await _prefChecker.IsAllowedAsync(
+                        swapRequest.RequesterPatient.UserId, NotificationChannel.Email, NotificationType.SwapResult, ct))
+                    await _email.SendAsync(
+                        requesterUser.Email,
+                        "Slot swap declined",
+                        "Your slot swap request was declined by the other patient.",
                     ct);
 
             _logger.LogInformation(

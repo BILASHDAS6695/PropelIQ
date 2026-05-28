@@ -43,5 +43,19 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(al => al.User)
             .HasForeignKey(al => al.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Notification preferences stored as a JSONB blob.
+        // Deserialisation defaults to all-enabled when the column is '{}' or null.
+        builder.Property(u => u.NotificationPreferences)
+            .HasColumnName("notification_preferences")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v,
+                    (System.Text.Json.JsonSerializerOptions?)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<
+                    HealthPlatform.Domain.ValueObjects.NotificationPreferences>(
+                    v,
+                    (System.Text.Json.JsonSerializerOptions?)null)
+                    ?? new HealthPlatform.Domain.ValueObjects.NotificationPreferences());
     }
 }

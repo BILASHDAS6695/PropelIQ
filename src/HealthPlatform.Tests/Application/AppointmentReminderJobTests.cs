@@ -29,8 +29,20 @@ public sealed class AppointmentReminderJobTests
         };
     }
 
+    private static INotificationPreferenceChecker AllowAllPrefChecker()
+    {
+        var m = new Mock<INotificationPreferenceChecker>();
+        m.Setup(c => c.IsAllowedAsync(
+                It.IsAny<Guid>(), It.IsAny<NotificationChannel>(),
+                It.IsAny<NotificationType>(), It.IsAny<CancellationToken>()))
+         .ReturnsAsync(true);
+        return m.Object;
+    }
+
     private static AppointmentReminderJob BuildJob(IUnitOfWork uow, IEmailSender emailSender) =>
-        new(uow, emailSender, new Mock<IInAppNotifier>().Object, NullLogger<AppointmentReminderJob>.Instance);
+        new(uow, emailSender, new Mock<IInAppNotifier>().Object,
+            AllowAllPrefChecker(),
+            NullLogger<AppointmentReminderJob>.Instance);
 
     // ── tests ─────────────────────────────────────────────────────────────────
 

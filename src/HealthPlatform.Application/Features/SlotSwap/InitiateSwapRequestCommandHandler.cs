@@ -18,6 +18,7 @@ internal sealed class InitiateSwapRequestCommandHandler
     private readonly ICurrentUserService                        _currentUser;
     private readonly IEmailSender                               _email;
     private readonly IInAppNotifier                             _inAppNotifier;
+    private readonly INotificationPreferenceChecker             _prefChecker;
     private readonly ILogger<InitiateSwapRequestCommandHandler> _logger;
 
     public InitiateSwapRequestCommandHandler(
@@ -25,12 +26,14 @@ internal sealed class InitiateSwapRequestCommandHandler
         ICurrentUserService                         currentUser,
         IEmailSender                                email,
         IInAppNotifier                              inAppNotifier,
+        INotificationPreferenceChecker              prefChecker,
         ILogger<InitiateSwapRequestCommandHandler>  logger)
     {
         _uow           = uow;
         _currentUser   = currentUser;
         _email         = email;
         _inAppNotifier = inAppNotifier;
+        _prefChecker   = prefChecker;
         _logger        = logger;
     }
 
@@ -145,7 +148,9 @@ internal sealed class InitiateSwapRequestCommandHandler
                 .GetByIdAsync(targetPatientProfile.UserId, ct);
 
             if (targetUser is not null)
-                await _email.SendAsync(
+                if (await _prefChecker.IsAllowedAsync(
+                        targetPatientProfile.UserId, NotificationChannel.Email, NotificationType.SwapRequest, ct))
+                    await _email.SendAsync(
                     targetUser.Email,
                     "Someone wants to swap appointment slots with you",
                     $"A patient has requested to swap slots. " +
