@@ -25,7 +25,7 @@ internal sealed class TodayAppointmentsSearchQueryHandler
                     query.AppointmentId),
                 ct);
 
-        return appointments
+        var list = appointments
             .Select(a => new TodayAppointmentItemDto(
                 a.Id,
                 a.PatientId,
@@ -34,8 +34,14 @@ internal sealed class TodayAppointmentsSearchQueryHandler
                 a.SlotTime,
                 a.IsWalkIn,
                 IsLate(a),
-                a.ArrivalTime))
+                a.ArrivalTime,
+                a.IntakeRecord?.Status.ToString()))
             .ToList();
+
+        if (query.HasIntakePending == true)
+            list = list.Where(x => x.IntakeStatus is null or "Draft").ToList();
+
+        return list.AsReadOnly();
     }
 
     private static bool IsLate(Appointment a) =>

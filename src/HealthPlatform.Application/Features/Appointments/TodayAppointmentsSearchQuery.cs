@@ -10,7 +10,8 @@ namespace HealthPlatform.Application.Features.Appointments;
 public sealed record TodayAppointmentsSearchQuery(
     Guid?   ProviderId,
     string? PatientNameFragment,
-    Guid?   AppointmentId)
+    Guid?   AppointmentId,
+    bool?   HasIntakePending = null)
     : IRequest<IReadOnlyList<TodayAppointmentItemDto>>;
 
 public sealed record TodayAppointmentItemDto(
@@ -21,4 +22,5 @@ public sealed record TodayAppointmentItemDto(
     DateTimeOffset  SlotTime,
     bool            IsWalkIn,
     bool            IsLateArrival,
-    DateTimeOffset? ArrivalTime);
+    DateTimeOffset? ArrivalTime,
+    string?         IntakeStatus);

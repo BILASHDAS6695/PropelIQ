@@ -22,6 +22,7 @@ internal sealed class AppointmentsByPatientIdSpecification : ISpecification<Appo
     [
         a => a.Provider,
         a => a.Slot!,
+        a => a.IntakeRecord!,
     ];
 
     public Expression<Func<Appointment, object>>? OrderBy            => null;

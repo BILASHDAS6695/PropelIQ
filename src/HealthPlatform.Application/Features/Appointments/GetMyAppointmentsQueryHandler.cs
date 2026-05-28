@@ -1,3 +1,4 @@
+using HealthPlatform.Application.Features.Intake;
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Domain.Common.Exceptions;
 using HealthPlatform.Domain.Entities;
@@ -38,14 +39,16 @@ internal sealed class GetMyAppointmentsQueryHandler
 
         return appointments
             .Select(a => new PatientAppointmentDto(
-                AppointmentId: a.Id,
-                ProviderId:    a.ProviderId,
-                ProviderName:  a.Provider.Name,
-                SlotTime:      a.SlotTime,
-                EndTime:       a.Slot?.EndTime ?? a.SlotTime.AddMinutes(30),
-                Status:        a.Status.ToString(),
-                VisitReason:   a.VisitReason,
-                PatientName:   patientName))
+                AppointmentId:      a.Id,
+                ProviderId:         a.ProviderId,
+                ProviderName:       a.Provider.Name,
+                SlotTime:           a.SlotTime,
+                EndTime:            a.Slot?.EndTime ?? a.SlotTime.AddMinutes(30),
+                Status:             a.Status.ToString(),
+                VisitReason:        a.VisitReason,
+                PatientName:        patientName,
+                IntakeStatus:       a.IntakeRecord?.Status.ToString(),
+                IsIntakeWindowOpen: IntakeWindowService.Evaluate(a).IsOpen))
             .ToList()
             .AsReadOnly();
     }
