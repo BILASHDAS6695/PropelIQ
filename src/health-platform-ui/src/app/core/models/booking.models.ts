@@ -42,3 +42,37 @@ export enum AppointmentStatus {
   WalkIn = 'WalkIn',
   InProgress = 'InProgress',
 }
+
+// ── Slot Swap types ──────────────────────────────────────────────────────────
+
+/** Anonymized booked slot available for swap. Patient identity is never exposed. */
+export interface SwappableSlotDto {
+  appointmentId: string;
+  slotTime: string; // ISO-8601 DateTimeOffset
+}
+
+export enum SwapRequestStatus {
+  Pending = 'Pending',
+  Accepted = 'Accepted',
+  Declined = 'Declined',
+  Cancelled = 'Cancelled',
+  Expired = 'Expired',
+}
+
+/** Result returned from POST /appointments/{id}/swap-requests. */
+export interface SwapRequestDto {
+  swapRequestId: string;
+  requesterSlotTime: string; // ISO-8601
+  targetSlotTime: string; // ISO-8601
+  status: SwapRequestStatus;
+  expiresAt: string; // ISO-8601
+}
+
+/** One entry in the swap history list for an appointment. */
+export interface SwapHistoryItemDto {
+  swapRequestId: string;
+  requesterSlotTime: string; // ISO-8601
+  targetSlotTime: string; // ISO-8601
+  status: SwapRequestStatus;
+  expiresAt: string; // ISO-8601
+}

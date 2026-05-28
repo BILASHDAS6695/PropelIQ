@@ -1,13 +1,34 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { DividerModule } from 'primeng/divider';
+import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../core/services/notification.service';
 import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
+import { SwapService } from '../../../core/services/swap.service';
+
+const SWAP_URL_RE = /\/appointments\/([0-9a-f-]+)\/swap-requests\/([0-9a-f-]+)$/i;
+
+function parseSwapIds(
+  actionUrl: string | null,
+): { appointmentId: string; swapRequestId: string } | null {
+  if (!actionUrl) return null;
+  const m = SWAP_URL_RE.exec(actionUrl);
+  if (!m) return null;
+  return { appointmentId: m[1], swapRequestId: m[2] };
+}
 
 @Component({
   selector: 'app-notification-bell',
@@ -21,6 +42,7 @@ import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
     BadgeModule,
     PopoverModule,
     DividerModule,
+    ToastModule,
     TooltipModule,
   ],
   template: `
@@ -62,7 +84,7 @@ import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
             (click)="onItemClick(n.id, n.actionUrl, panel)"
             (keyup.enter)="onItemClick(n.id, n.actionUrl, panel)"
           >
-            <i [class]="iconFor(n.type)" class="mt-1 text-primary"></i>
+            <i [class]="iconFor(n.type)" class="mt-1 text-primary" aria-hidden="true"></i>
             <div class="flex-1 min-w-0">
               <p
                 class="m-0 font-medium text-sm white-space-nowrap overflow-hidden text-overflow-ellipsis"
@@ -77,6 +99,33 @@ import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
               <span class="text-color-secondary text-xs">
                 {{ n.sentAt | date: 'short' }}
               </span>
+
+              <!-- Inline swap actions — only for pending SwapRequest notifications -->
+              @if (n.type === 'SwapRequest' && parseSwapIds(n.actionUrl)) {
+                <div class="flex gap-2 mt-2">
+                  <p-button
+                    label="Accept"
+                    severity="success"
+                    size="small"
+                    icon="pi pi-check"
+                    [loading]="respondingId() === n.id"
+                    [disabled]="respondingId() !== null && respondingId() !== n.id"
+                    (onClick)="respondToSwap($event, n.id, n.actionUrl, true, panel)"
+                    aria-label="Accept swap request"
+                  />
+                  <p-button
+                    label="Decline"
+                    severity="danger"
+                    size="small"
+                    icon="pi pi-times"
+                    [outlined]="true"
+                    [loading]="respondingId() === n.id"
+                    [disabled]="respondingId() !== null && respondingId() !== n.id"
+                    (onClick)="respondToSwap($event, n.id, n.actionUrl, false, panel)"
+                    aria-label="Decline swap request"
+                  />
+                </div>
+              }
             </div>
             @if (!n.isRead) {
               <span
@@ -143,11 +192,26 @@ import { NOTIFICATION_ICONS } from '../../../core/models/notification.model';
     `,
   ],
 })
-export class NotificationBellComponent implements OnInit {
+export class NotificationBellComponent implements OnInit, OnDestroy {
   readonly svc = inject(NotificationService);
+  private readonly swapSvc = inject(SwapService);
+  private readonly toast = inject(MessageService);
+
+  /** Tracks which notification ID has an in-flight respond request. */
+  readonly respondingId = signal<string | null>(null);
+
+  /** Expose module-level fn to template (ChangeDetectionStrategy.OnPush safe). */
+  protected readonly parseSwapIds = parseSwapIds;
+
+  private readonly focusHandler = (): void => this.svc.loadFromApi();
 
   ngOnInit(): void {
     this.svc.init();
+    window.addEventListener('focus', this.focusHandler);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('focus', this.focusHandler);
   }
 
   iconFor(type: string): string {
@@ -162,5 +226,53 @@ export class NotificationBellComponent implements OnInit {
   markAllRead(panel: Popover): void {
     this.svc.markRead();
     panel.hide();
+  }
+
+  respondToSwap(
+    event: Event,
+    notificationId: string,
+    actionUrl: string | null,
+    accept: boolean,
+    panel: Popover,
+  ): void {
+    event.stopPropagation();
+
+    const ids = parseSwapIds(actionUrl);
+    if (!ids) {
+      this.toast.add({
+        severity: 'warn',
+        summary: 'Action unavailable',
+        detail: 'Unable to identify the swap request. Please refresh.',
+        life: 5_000,
+      });
+      return;
+    }
+
+    this.respondingId.set(notificationId);
+
+    this.swapSvc.respondToSwapRequest(ids.appointmentId, ids.swapRequestId, accept).subscribe({
+      next: () => {
+        this.respondingId.set(null);
+        this.svc.markRead(notificationId);
+        this.svc.loadFromApi();
+        panel.hide();
+        this.toast.add({
+          severity: 'success',
+          summary: accept ? 'Swap accepted' : 'Swap declined',
+          detail: accept
+            ? 'Your appointment time has been updated.'
+            : 'The requester has been notified.',
+          life: 5_000,
+        });
+      },
+      error: (err) => {
+        this.respondingId.set(null);
+        const detail =
+          err?.status === 409
+            ? 'This swap request has already expired or been actioned.'
+            : 'Something went wrong. Please try again.';
+        this.toast.add({ severity: 'error', summary: 'Action failed', detail, life: 6_000 });
+      },
+    });
   }
 }
