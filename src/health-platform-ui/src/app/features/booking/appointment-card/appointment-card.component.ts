@@ -5,13 +5,14 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { AppointmentItemDto, AppointmentStatus } from '../../../core/models/booking.models';
 import { IcsService } from '../../../core/services/ics.service';
+import { SwapHistoryComponent } from '../swap/swap-history/swap-history.component';
 
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 @Component({
   selector: 'app-appointment-card',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule],
+  imports: [CommonModule, CardModule, ButtonModule, TagModule, SwapHistoryComponent],
   template: `
     <p-card styleClass="mb-3">
       <div class="flex justify-content-between align-items-start flex-wrap gap-2">
@@ -65,8 +66,22 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contr
               (onClick)="downloadIcs(appointment)"
             />
           }
+          @if (showSwap) {
+            <p-button
+              label="Swap Slot"
+              severity="secondary"
+              size="small"
+              icon="pi pi-arrows-h"
+              [outlined]="true"
+              aria-label="Request a slot swap for this appointment"
+              (onClick)="swapRequest.emit(appointment)"
+            />
+          }
         </div>
       </div>
+      @if (showSwapHistory) {
+        <app-swap-history [appointmentId]="appointment.appointmentId" />
+      }
     </p-card>
   `,
 })
@@ -75,9 +90,12 @@ export class AppointmentCardComponent {
   @Input() showCancel = false;
   @Input() showReschedule = false;
   @Input() showAddToCalendar = false;
+  @Input() showSwap = false;
+  @Input() showSwapHistory = false;
 
   @Output() cancelRequest = new EventEmitter<AppointmentItemDto>();
   @Output() rescheduleRequest = new EventEmitter<AppointmentItemDto>();
+  @Output() swapRequest = new EventEmitter<AppointmentItemDto>();
 
   private readonly ics = inject(IcsService);
 
