@@ -25,7 +25,17 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
 @Component({
   selector: 'app-document-detail',
   standalone: true,
-  imports: [ButtonModule, CardModule, DecimalPipe, PercentPipe, PanelModule, SkeletonModule, TagModule, TooltipModule, RouterLink],
+  imports: [
+    ButtonModule,
+    CardModule,
+    DecimalPipe,
+    PercentPipe,
+    PanelModule,
+    SkeletonModule,
+    TagModule,
+    TooltipModule,
+    RouterLink,
+  ],
   template: `
     <div style="max-width: 900px; margin: 0 auto" class="p-3">
       <!-- Back navigation -->
@@ -52,9 +62,18 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
           class="surface-100 border-round p-4 text-center text-color-secondary"
           style="border-left: 4px solid var(--red-500)"
         >
-          <i class="pi pi-exclamation-triangle mb-2" style="font-size: 1.5rem; color: var(--red-500)"></i>
+          <i
+            class="pi pi-exclamation-triangle mb-2"
+            style="font-size: 1.5rem; color: var(--red-500)"
+          ></i>
           <p>{{ error() }}</p>
-          <p-button label="Retry" icon="pi pi-refresh" [text]="true" (onClick)="load()" styleClass="mt-1" />
+          <p-button
+            label="Retry"
+            icon="pi pi-refresh"
+            [text]="true"
+            (onClick)="load()"
+            styleClass="mt-1"
+          />
         </div>
       }
 
@@ -88,7 +107,13 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
             <div class="surface-100 border-round p-4 text-center text-color-secondary mb-3">
               <i class="pi pi-spin pi-spinner mb-2" style="font-size: 1.5rem"></i>
               <p>OCR extraction is in progress. Refresh the page in a few seconds.</p>
-              <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" styleClass="mt-1" />
+              <p-button
+                label="Refresh"
+                icon="pi pi-refresh"
+                [text]="true"
+                (onClick)="load()"
+                styleClass="mt-1"
+              />
             </div>
           }
 
@@ -98,7 +123,10 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
               class="surface-100 border-round p-4 text-center text-color-secondary mb-3"
               style="border-left: 4px solid var(--red-500)"
             >
-              <i class="pi pi-times-circle mb-2" style="font-size: 1.5rem; color: var(--red-500)"></i>
+              <i
+                class="pi pi-times-circle mb-2"
+                style="font-size: 1.5rem; color: var(--red-500)"
+              ></i>
               <p>OCR extraction failed. The document may be illegible or corrupted.</p>
               <p class="text-sm">Please contact your clinical administrator for manual review.</p>
             </div>
@@ -108,14 +136,21 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
           @else if (document()!.pages.length > 0) {
             @for (page of document()!.pages; track page.pageNumber) {
               <p-panel
-                [header]="'Page ' + page.pageNumber + '  (' + (page.confidenceScore | number: '1.1-1') + '% confidence)'"
+                [header]="
+                  'Page ' +
+                  page.pageNumber +
+                  '  (' +
+                  (page.confidenceScore | number: '1.1-1') +
+                  '% confidence)'
+                "
                 [toggleable]="true"
                 styleClass="mb-2"
               >
                 <pre
                   class="m-0 white-space-pre-wrap"
                   style="font-family: inherit; font-size: 0.9rem; line-height: 1.6"
-                >{{ page.text || '(No text detected on this page)' }}</pre>
+                  >{{ page.text || '(No text detected on this page)' }}</pre
+                >
               </p-panel>
             }
           }
@@ -142,12 +177,19 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
                         class="inline-flex align-items-center gap-1 border-round px-2 py-1 text-sm"
                         [class.surface-100]="!entity.lowConfidence"
                         [class.surface-200]="entity.lowConfidence"
-                        [pTooltip]="'Confidence: ' + (entity.confidenceScore | percent: '1.0-0') + (entity.lowConfidence ? ' (low)' : '')"
+                        [pTooltip]="
+                          'Confidence: ' +
+                          (entity.confidenceScore | percent: '1.0-0') +
+                          (entity.lowConfidence ? ' (low)' : '')
+                        "
                         tooltipPosition="top"
                       >
                         {{ entity.text }}
                         @if (entity.lowConfidence) {
-                          <i class="pi pi-exclamation-triangle text-yellow-500" style="font-size: 0.7rem"></i>
+                          <i
+                            class="pi pi-exclamation-triangle text-yellow-500"
+                            style="font-size: 0.7rem"
+                          ></i>
                         }
                       </span>
                     }
