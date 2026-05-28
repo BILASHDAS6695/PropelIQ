@@ -52,27 +52,27 @@ export interface SwappableSlotDto {
 }
 
 export enum SwapRequestStatus {
-  Pending   = 'Pending',
-  Accepted  = 'Accepted',
-  Declined  = 'Declined',
+  Pending = 'Pending',
+  Accepted = 'Accepted',
+  Declined = 'Declined',
   Cancelled = 'Cancelled',
-  Expired   = 'Expired',
+  Expired = 'Expired',
 }
 
 /** Result returned from POST /appointments/{id}/swap-requests. */
 export interface SwapRequestDto {
   swapRequestId: string;
   requesterSlotTime: string; // ISO-8601
-  targetSlotTime: string;    // ISO-8601
+  targetSlotTime: string; // ISO-8601
   status: SwapRequestStatus;
-  expiresAt: string;         // ISO-8601
+  expiresAt: string; // ISO-8601
 }
 
 /** One entry in the swap history list for an appointment. */
 export interface SwapHistoryItemDto {
   swapRequestId: string;
   requesterSlotTime: string; // ISO-8601
-  targetSlotTime: string;    // ISO-8601
+  targetSlotTime: string; // ISO-8601
   status: SwapRequestStatus;
-  expiresAt: string;         // ISO-8601
+  expiresAt: string; // ISO-8601
 }

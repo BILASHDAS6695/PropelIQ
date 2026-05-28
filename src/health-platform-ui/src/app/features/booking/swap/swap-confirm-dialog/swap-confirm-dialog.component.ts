@@ -2,10 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import {
-  AppointmentItemDto,
-  SwappableSlotDto,
-} from '../../../../core/models/booking.models';
+import { AppointmentItemDto, SwappableSlotDto } from '../../../../core/models/booking.models';
 
 @Component({
   selector: 'app-swap-confirm-dialog',
@@ -29,8 +26,8 @@ import {
         slot?
       </p>
       <p class="text-sm text-color-secondary mb-0">
-        The other patient must accept this request. You may cancel it at any time
-        while it remains pending.
+        The other patient must accept this request. You may cancel it at any time while it remains
+        pending.
       </p>
       <div class="flex justify-content-end gap-2 mt-4">
         <p-button

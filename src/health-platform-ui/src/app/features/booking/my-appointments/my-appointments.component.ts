@@ -13,7 +13,11 @@ import { AppointmentCardComponent } from '../appointment-card/appointment-card.c
 import { BookingStore } from '../booking.store';
 import { SwapSlotBrowserComponent } from '../swap/swap-slot-browser/swap-slot-browser.component';
 import { SwapConfirmDialogComponent } from '../swap/swap-confirm-dialog/swap-confirm-dialog.component';
-import { AppointmentItemDto, AppointmentStatus, SwappableSlotDto } from '../../../core/models/booking.models';
+import {
+  AppointmentItemDto,
+  AppointmentStatus,
+  SwappableSlotDto,
+} from '../../../core/models/booking.models';
 import { IcsService } from '../../../core/services/ics.service';
 import { SwapService } from '../../../core/services/swap.service';
 
@@ -138,7 +142,7 @@ const PAST_STATUSES: string[] = [
         [appointment]="swapTargetAppt()!"
         [visible]="showSwapBrowser()"
         (slotSelected)="onSlotSelected($event)"
-        (cancel)="closeSwapBrowser()"
+        (dismissed)="closeSwapBrowser()"
       />
     }
 

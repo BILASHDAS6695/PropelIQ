@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -95,7 +102,7 @@ function parseSwapIds(
 
               <!-- Inline swap actions — only for pending SwapRequest notifications -->
               @if (n.type === 'SwapRequest' && parseSwapIds(n.actionUrl)) {
-                <div class="flex gap-2 mt-2" (click)="$event.stopPropagation()">
+                <div class="flex gap-2 mt-2">
                   <p-button
                     label="Accept"
                     severity="success"
@@ -243,31 +250,29 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 
     this.respondingId.set(notificationId);
 
-    this.swapSvc
-      .respondToSwapRequest(ids.appointmentId, ids.swapRequestId, accept)
-      .subscribe({
-        next: () => {
-          this.respondingId.set(null);
-          this.svc.markRead(notificationId);
-          this.svc.loadFromApi();
-          panel.hide();
-          this.toast.add({
-            severity: 'success',
-            summary: accept ? 'Swap accepted' : 'Swap declined',
-            detail: accept
-              ? 'Your appointment time has been updated.'
-              : 'The requester has been notified.',
-            life: 5_000,
-          });
-        },
-        error: (err) => {
-          this.respondingId.set(null);
-          const detail =
-            err?.status === 409
-              ? 'This swap request has already expired or been actioned.'
-              : 'Something went wrong. Please try again.';
-          this.toast.add({ severity: 'error', summary: 'Action failed', detail, life: 6_000 });
-        },
-      });
+    this.swapSvc.respondToSwapRequest(ids.appointmentId, ids.swapRequestId, accept).subscribe({
+      next: () => {
+        this.respondingId.set(null);
+        this.svc.markRead(notificationId);
+        this.svc.loadFromApi();
+        panel.hide();
+        this.toast.add({
+          severity: 'success',
+          summary: accept ? 'Swap accepted' : 'Swap declined',
+          detail: accept
+            ? 'Your appointment time has been updated.'
+            : 'The requester has been notified.',
+          life: 5_000,
+        });
+      },
+      error: (err) => {
+        this.respondingId.set(null);
+        const detail =
+          err?.status === 409
+            ? 'This swap request has already expired or been actioned.'
+            : 'Something went wrong. Please try again.';
+        this.toast.add({ severity: 'error', summary: 'Action failed', detail, life: 6_000 });
+      },
+    });
   }
 }

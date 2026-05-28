@@ -3,19 +3,16 @@ import { Component, inject, Input, OnChanges, signal } from '@angular/core';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { SwapService } from '../../../../core/services/swap.service';
-import {
-  SwapHistoryItemDto,
-  SwapRequestStatus,
-} from '../../../../core/models/booking.models';
+import { SwapHistoryItemDto, SwapRequestStatus } from '../../../../core/models/booking.models';
 
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
 const STATUS_SEVERITY: Record<SwapRequestStatus, TagSeverity> = {
-  [SwapRequestStatus.Pending]:   'info',
-  [SwapRequestStatus.Accepted]:  'success',
-  [SwapRequestStatus.Declined]:  'danger',
+  [SwapRequestStatus.Pending]: 'info',
+  [SwapRequestStatus.Accepted]: 'success',
+  [SwapRequestStatus.Declined]: 'danger',
   [SwapRequestStatus.Cancelled]: 'secondary',
-  [SwapRequestStatus.Expired]:   'warn',
+  [SwapRequestStatus.Expired]: 'warn',
 };
 
 @Component({

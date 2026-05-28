@@ -1,21 +1,10 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  EventEmitter,
-  inject,
-  Input,
-  OnChanges,
-  Output,
-  signal,
-} from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SwapService } from '../../../../core/services/swap.service';
-import {
-  AppointmentItemDto,
-  SwappableSlotDto,
-} from '../../../../core/models/booking.models';
+import { AppointmentItemDto, SwappableSlotDto } from '../../../../core/models/booking.models';
 
 @Component({
   selector: 'app-swap-slot-browser',
@@ -29,7 +18,7 @@ import {
       [draggable]="false"
       [resizable]="false"
       [style]="{ width: 'min(480px, 95vw)' }"
-      (onHide)="cancel.emit()"
+      (onHide)="dismissed.emit()"
     >
       @if (loading()) {
         @for (i of [1, 2, 3]; track i) {
@@ -47,7 +36,7 @@ import {
           Failed to load available slots. Please try again.
         </div>
         <div class="flex justify-content-end mt-3">
-          <p-button label="Close" severity="secondary" (onClick)="cancel.emit()" />
+          <p-button label="Close" severity="secondary" (onClick)="dismissed.emit()" />
         </div>
       } @else if (slots().length === 0) {
         <div class="text-center py-4 text-color-secondary" role="status">
@@ -59,7 +48,7 @@ import {
           No swap options available for this appointment.
         </div>
         <div class="flex justify-content-end mt-3">
-          <p-button label="Close" severity="secondary" (onClick)="cancel.emit()" />
+          <p-button label="Close" severity="secondary" (onClick)="dismissed.emit()" />
         </div>
       } @else {
         <p class="text-sm text-color-secondary mb-3">
@@ -91,7 +80,7 @@ import {
             label="Cancel"
             severity="secondary"
             [outlined]="true"
-            (onClick)="cancel.emit()"
+            (onClick)="dismissed.emit()"
           />
           <p-button
             label="Next"
@@ -118,7 +107,7 @@ export class SwapSlotBrowserComponent implements OnChanges {
   @Input() visible = false;
 
   @Output() slotSelected = new EventEmitter<SwappableSlotDto>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() dismissed = new EventEmitter<void>();
 
   private readonly swapSvc = inject(SwapService);
 
