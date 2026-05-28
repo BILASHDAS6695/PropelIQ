@@ -119,11 +119,27 @@ internal static class EmailTemplateService
     // ── 3. Appointment Reminder ───────────────────────────────────────────────
 
     public static (string Subject, string Body) Reminder(
-        string patientName,
-        string providerName,
+        string         patientName,
+        string         providerName,
         DateTimeOffset appointmentTime,
-        Guid appointmentId)
+        Guid           appointmentId,
+        string?        intakeUrl = null)
     {
+        var intakeCta = intakeUrl is not null
+            ? $"""
+              <tr><td style="padding:16px 0;">
+                <p style="font-size:14px;color:#333;margin:0 0 8px;">
+                  Save time at your appointment — complete your intake form online:
+                </p>
+                <a href="{intakeUrl}"
+                   style="display:inline-block;background:#1976d2;color:#ffffff;padding:10px 20px;
+                          border-radius:4px;text-decoration:none;font-size:14px;">
+                  Complete Your Intake
+                </a>
+              </td></tr>
+              """
+            : string.Empty;
+
         var subject = $"Reminder: appointment tomorrow with {providerName}";
         var body = Wrap(
             "Appointment Reminder",
@@ -138,6 +154,7 @@ internal static class EmailTemplateService
                 ("Time",     appointmentTime.ToString("h:mm tt zzz")),
                 ("Ref #",    appointmentId.ToString("N")[..8].ToUpperInvariant())
             )}
+            <table cellpadding="0" cellspacing="0" style="margin:0;">{intakeCta}</table>
             """);
 
         return (subject, body);

@@ -13,4 +13,7 @@ public sealed class ReminderSettings
 
     /// <summary>Hours before the appointment at which the second reminder fires (default: 2).</summary>
     public int HoursBeforeSecond { get; init; } = 2;
+
+    /// <summary>Base URL of the Angular frontend, used to build intake deep-links in reminder emails.</summary>
+    public string FrontendBaseUrl { get; init; } = "https://localhost:4200";
 }

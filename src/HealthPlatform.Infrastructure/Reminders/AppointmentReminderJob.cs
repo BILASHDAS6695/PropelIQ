@@ -1,10 +1,12 @@
 using Hangfire;
 using HealthPlatform.Application.Features.Appointments;
+using HealthPlatform.Application.Features.Intake;
 using HealthPlatform.Application.Interfaces;
 using HealthPlatform.Domain.Entities;
 using HealthPlatform.Domain.Enums;
 using HealthPlatform.Infrastructure.Messaging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace HealthPlatform.Infrastructure.Reminders;
 
@@ -21,19 +23,22 @@ internal sealed class AppointmentReminderJob
     private readonly IInAppNotifier                   _inAppNotifier;
     private readonly INotificationPreferenceChecker   _prefChecker;
     private readonly ILogger<AppointmentReminderJob>  _logger;
+    private readonly ReminderSettings                 _settings;
 
     public AppointmentReminderJob(
         IUnitOfWork                     uow,
         IEmailSender                    emailSender,
         IInAppNotifier                  inAppNotifier,
         INotificationPreferenceChecker  prefChecker,
-        ILogger<AppointmentReminderJob> logger)
+        ILogger<AppointmentReminderJob> logger,
+        IOptions<ReminderSettings>      settings)
     {
         _uow           = uow;
         _emailSender   = emailSender;
         _inAppNotifier = inAppNotifier;
         _prefChecker   = prefChecker;
         _logger        = logger;
+        _settings      = settings.Value;
     }
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 300, 1500, 7500 })]
@@ -68,11 +73,20 @@ internal sealed class AppointmentReminderJob
         var providerName = appointment.Provider.Name;
         var email        = appointment.Patient.User.Email;
 
+        string? intakeUrl = null;
+        if (!appointment.IsWalkIn)
+        {
+            var (isOpen, _) = IntakeWindowService.Evaluate(appointment);
+            if (isOpen)
+                intakeUrl = $"{_settings.FrontendBaseUrl}/intake/form?appointmentId={appointment.Id}";
+        }
+
         var (subject, body) = EmailTemplateService.Reminder(
             patientName,
             providerName,
             appointment.SlotTime,
-            appointment.Id);
+            appointment.Id,
+            intakeUrl);
 
         _logger.LogInformation(
             "AppointmentReminderJob: sending reminder for appointment {AppointmentId} to {Email}.",

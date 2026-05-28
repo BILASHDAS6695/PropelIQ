@@ -128,4 +128,19 @@ public class IntakeController : ControllerBase
             new MarkIntakeReviewedCommand(appointmentId, _currentUser.UserId.Value), ct);
         return NoContent();
     }
+
+    /// <summary>Staff triggers intake for a walk-in patient.</summary>
+    [HttpPost("/api/appointments/{appointmentId:guid}/intake/trigger")]
+    [Authorize(Roles = "Staff,Admin")]
+    public async Task<IActionResult> TriggerWalkInIntake(
+        Guid appointmentId,
+        CancellationToken ct)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return Unauthorized();
+
+        var id = await _sender.Send(
+            new TriggerWalkInIntakeCommand(appointmentId, _currentUser.UserId.Value), ct);
+        return Ok(new { id });
+    }
 }
