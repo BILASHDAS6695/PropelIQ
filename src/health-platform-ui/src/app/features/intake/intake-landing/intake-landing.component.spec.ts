@@ -29,4 +29,15 @@ describe('IntakeLandingComponent', () => {
   it('should create', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
+
+  it('should initialise at step 1', () => {
+    fixture.detectChanges();
+    expect(fixture.componentInstance['currentStep']()).toBe(1);
+  });
+
+  it('should advance to step 2 via nextStep()', () => {
+    fixture.detectChanges();
+    fixture.componentInstance['nextStep']();
+    expect(fixture.componentInstance['currentStep']()).toBe(2);
+  });
 });

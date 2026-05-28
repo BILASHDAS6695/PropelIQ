@@ -26,4 +26,13 @@ describe('IntakeChatComponent', () => {
   it('should create', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
+
+  it('should expose a non-empty quickReplies list', () => {
+    expect(fixture.componentInstance['quickReplies'].length).toBeGreaterThan(0);
+  });
+
+  it('should have retryLast method on the injected store', () => {
+    const store = TestBed.inject(IntakeChatStore);
+    expect(typeof store.retryLast).toBe('function');
+  });
 });

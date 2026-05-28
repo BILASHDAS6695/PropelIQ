@@ -17,6 +17,15 @@ import { TagModule } from 'primeng/tag';
 import { IntakeChatStore } from '../intake-chat.store';
 import { IntakeModeToggleComponent } from '../intake-mode-toggle/intake-mode-toggle.component';
 
+const QUICK_REPLIES = [
+  'No known allergies',
+  'No current medications',
+  'No significant medical history',
+  'Symptoms started recently',
+  'Same issue as before',
+  'Feeling better overall',
+] as const;
+
 @Component({
   selector: 'app-intake-chat',
   standalone: true,
@@ -92,6 +101,25 @@ import { IntakeModeToggleComponent } from '../intake-mode-toggle/intake-mode-tog
         padding: 1.25rem;
         margin-top: 1rem;
       }
+      .quick-replies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        padding: 0.5rem 0 0.25rem;
+      }
+      .retry-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-top: 0.25rem;
+      }
+      @media (max-width: 640px) {
+        .chat-page {
+          padding: 0.5rem;
+          height: 100dvh;
+          max-width: 100%;
+        }
+      }
     `,
   ],
   template: `
@@ -116,6 +144,20 @@ import { IntakeModeToggleComponent } from '../intake-mode-toggle/intake-mode-tog
             >
               {{ msg.content }}
             </div>
+            @if (store.failedAtIndex() === $index) {
+              <div class="retry-row">
+                <span class="text-red-500 text-xs">Message not sent</span>
+                <p-button
+                  label="Retry"
+                  icon="pi pi-refresh"
+                  severity="danger"
+                  size="small"
+                  [text]="true"
+                  (onClick)="store.retryLast()"
+                  aria-label="Retry sending failed message"
+                />
+              </div>
+            }
           </div>
         }
 
@@ -139,6 +181,22 @@ import { IntakeModeToggleComponent } from '../intake-mode-toggle/intake-mode-tog
               }
             }
           </div>
+        </div>
+      }
+
+      <!-- Quick-reply suggestions -->
+      @if (!store.isLoading() && !store.isComplete() && store.messages().length > 0) {
+        <div class="quick-replies" role="group" aria-label="Quick reply suggestions">
+          @for (reply of quickReplies; track reply) {
+            <p-button
+              [label]="reply"
+              severity="secondary"
+              size="small"
+              [outlined]="true"
+              (onClick)="submit(reply)"
+              [attr.aria-label]="'Quick reply: ' + reply"
+            />
+          }
         </div>
       }
 
@@ -171,6 +229,7 @@ export class IntakeChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef<HTMLElement>;
 
   protected inputText = signal('');
+  protected readonly quickReplies = QUICK_REPLIES;
 
   protected collectedEntries(): { key: string; value: string | null }[] {
     return Object.entries(this.store.collected()).map(([key, value]) => ({ key, value }));
@@ -189,8 +248,8 @@ export class IntakeChatComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  protected async submit(): Promise<void> {
-    const text = this.inputText().trim();
+  protected async submit(override?: string): Promise<void> {
+    const text = override ?? this.inputText().trim();
     if (!text) return;
     this.inputText.set('');
     await this.store.sendMessage(text);
