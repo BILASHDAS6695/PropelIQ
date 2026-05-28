@@ -138,6 +138,27 @@ public sealed class PatientsController : ControllerBase
         var result = await _sender.Send(new GetDocumentOcrResultQuery(patientId, documentId), ct);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Streams the original (decrypted) clinical document file.
+    /// Used by the Angular document viewer to display the source PDF or image.
+    /// </summary>
+    /// <param name="patientId">Patient's User.Id (matches JWT sub for ownership check).</param>
+    /// <param name="documentId">The clinical document identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>200 OK — raw file bytes with the document's original MIME type.</returns>
+    [HttpGet("{patientId:guid}/documents/{documentId:guid}/raw")]
+    [Authorize(Policy = PolicyNames.PatientOwnership)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDocumentRaw(
+        Guid patientId,
+        Guid documentId,
+        CancellationToken ct)
+    {
+        var result = await _sender.Send(new GetDocumentRawFileQuery(patientId, documentId), ct);
+        return File(result.FileStream, result.ContentType, result.FileName);
+    }
 }
 
 /// <summary>Payload for quick-creating a walk-in patient profile.</summary>

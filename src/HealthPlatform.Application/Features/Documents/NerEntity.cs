@@ -27,5 +27,8 @@ public sealed record NerEntity(
     /// True when the confidence score is below the configured minimum threshold.
     /// Low-confidence entities are stored but should be treated as unverified.
     /// </summary>
-    bool LowConfidence
+    bool LowConfidence,
+
+    /// <summary>1-based page number matching <see cref="OcrPageResult.PageNumber"/>.</summary>
+    int PageNumber
 );

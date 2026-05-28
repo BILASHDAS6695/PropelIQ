@@ -1,16 +1,17 @@
-import { DecimalPipe, PercentPipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { PanelModule } from 'primeng/panel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
-import { TooltipModule } from 'primeng/tooltip';
 import { AuthStore } from '../../../core/auth/auth.store';
-import type { DocumentOcrResultDto, NerEntity } from '../../../core/models/document.models';
+import type { DocumentOcrResultDto } from '../../../core/models/document.models';
 import { DocumentService } from '../../../core/services/document.service';
+import { DocumentViewerComponent } from './document-viewer.component';
+import { environment } from '../../../../environments/environment';
 
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
@@ -28,12 +29,9 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
   imports: [
     ButtonModule,
     CardModule,
-    DecimalPipe,
-    PercentPipe,
-    PanelModule,
+    DocumentViewerComponent,
     SkeletonModule,
     TagModule,
-    TooltipModule,
     RouterLink,
   ],
   template: `
@@ -93,8 +91,21 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
               />
               @if (document()!.ocrConfidenceScore !== null) {
                 <span class="text-sm text-color-secondary">
-                  Confidence: {{ document()!.ocrConfidenceScore | number: '1.1-1' }}%
+                  Confidence: {{ formatConfidence(document()!.ocrConfidenceScore) }}
                 </span>
+              }
+              @if (
+                document()!.processingStatus === 'Processed' &&
+                document()!.pages.length > 0 &&
+                (isPdf() || isImage())
+              ) {
+                <p-button
+                  [label]="viewMode() === 'split' ? 'Text Only' : 'Side-by-Side'"
+                  [icon]="viewMode() === 'split' ? 'pi pi-align-left' : 'pi pi-table'"
+                  [text]="true"
+                  size="small"
+                  (onClick)="viewMode.set(viewMode() === 'split' ? 'text' : 'split')"
+                />
               }
             </div>
           </div>
@@ -132,26 +143,52 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
             </div>
           }
 
-          <!-- Extracted text pages -->
+          <!-- Document Viewer (pages + entity highlights + summary) -->
           @else if (document()!.pages.length > 0) {
-            @for (page of document()!.pages; track page.pageNumber) {
-              <p-panel
-                [header]="
-                  'Page ' +
-                  page.pageNumber +
-                  '  (' +
-                  (page.confidenceScore | number: '1.1-1') +
-                  '% confidence)'
-                "
-                [toggleable]="true"
-                styleClass="mb-2"
-              >
-                <pre
-                  class="m-0 white-space-pre-wrap"
-                  style="font-family: inherit; font-size: 0.9rem; line-height: 1.6"
-                  >{{ page.text || '(No text detected on this page)' }}</pre
-                >
-              </p-panel>
+            <!-- Side-by-side view -->
+            @if (viewMode() === 'split' && (isPdf() || isImage())) {
+              <div class="flex gap-2 mt-3" style="height: 75vh">
+                <!-- Left: original document -->
+                <div class="flex-1 overflow-auto border-round surface-50 p-2">
+                  @if (isPdf() && safeBlobUrl()) {
+                    <object
+                      [data]="safeBlobUrl()!"
+                      type="application/pdf"
+                      class="w-full h-full border-none"
+                      style="min-height: 600px"
+                    >
+                      <p class="text-color-secondary text-sm p-3">
+                        Your browser cannot display PDF files inline.
+                      </p>
+                    </object>
+                  } @else if (isImage() && blobUrl()) {
+                    <img
+                      [src]="blobUrl()!"
+                      [alt]="document()!.fileName"
+                      class="w-full"
+                      style="object-fit: contain"
+                    />
+                  } @else if (blobLoading()) {
+                    <div class="text-center text-color-secondary p-4">
+                      <i class="pi pi-spin pi-spinner"></i>
+                      <p class="mt-2 text-sm">Loading document…</p>
+                    </div>
+                  }
+                </div>
+
+                <!-- Right: entity-highlighted text -->
+                <div class="flex-1 overflow-auto border-round surface-50 p-2">
+                  <app-document-viewer
+                    [pages]="document()!.pages"
+                    [entities]="document()!.entities"
+                  />
+                </div>
+              </div>
+            }
+
+            <!-- Text-only view (default) -->
+            @else {
+              <app-document-viewer [pages]="document()!.pages" [entities]="document()!.entities" />
             }
           }
 
@@ -161,58 +198,54 @@ const STATUS_SEVERITY: Record<string, TagSeverity> = {
               <p>No text was extracted from this document.</p>
             </div>
           }
-
-          <!-- Named Entities -->
-          @if (document()!.entities.length > 0) {
-            <div class="mt-4">
-              <h2 class="text-lg font-semibold mb-2">Extracted Clinical Entities</h2>
-              @for (entry of objectEntries(entityGroups()); track entry[0]) {
-                <div class="mb-3">
-                  <span class="text-sm font-semibold text-color-secondary uppercase tracking-wide">
-                    {{ entry[0] }}
-                  </span>
-                  <div class="flex flex-wrap gap-2 mt-1">
-                    @for (entity of entry[1]; track entity.startOffset) {
-                      <span
-                        class="inline-flex align-items-center gap-1 border-round px-2 py-1 text-sm"
-                        [class.surface-100]="!entity.lowConfidence"
-                        [class.surface-200]="entity.lowConfidence"
-                        [pTooltip]="
-                          'Confidence: ' +
-                          (entity.confidenceScore | percent: '1.0-0') +
-                          (entity.lowConfidence ? ' (low)' : '')
-                        "
-                        tooltipPosition="top"
-                      >
-                        {{ entity.text }}
-                        @if (entity.lowConfidence) {
-                          <i
-                            class="pi pi-exclamation-triangle text-yellow-500"
-                            style="font-size: 0.7rem"
-                          ></i>
-                        }
-                      </span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
         </div>
       }
     </div>
   `,
 })
-export class DocumentDetailComponent implements OnInit {
+export class DocumentDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly docSvc = inject(DocumentService);
   private readonly auth = inject(AuthStore);
+  private readonly http = inject(HttpClient);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly document = signal<DocumentOcrResultDto | null>(null);
-  readonly entityGroups = signal<Record<string, NerEntity[]>>({});
-  readonly objectEntries = Object.entries;
+  readonly viewMode = signal<'split' | 'text'>('text');
+  readonly blobUrl = signal<string | null>(null);
+  readonly blobLoading = signal(false);
+
+  readonly rawDocumentUrl = computed(() => {
+    const doc = this.document();
+    const userId = this.auth.userId();
+    if (!doc || !userId) return null;
+    return `${environment.apiUrl}/patients/${userId}/documents/${doc.documentId}/raw`;
+  });
+
+  readonly safeBlobUrl = computed((): SafeResourceUrl | null => {
+    const url = this.blobUrl();
+    if (!url) return null;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  });
+
+  readonly isPdf = computed(
+    () =>
+      this.document()?.processingStatus === 'Processed' &&
+      (this.document()?.fileName.toLowerCase().endsWith('.pdf') ?? false),
+  );
+
+  readonly isImage = computed(() => {
+    const fname = this.document()?.fileName.toLowerCase() ?? '';
+    return (
+      fname.endsWith('.png') ||
+      fname.endsWith('.jpg') ||
+      fname.endsWith('.jpeg') ||
+      fname.endsWith('.tiff') ||
+      fname.endsWith('.tif')
+    );
+  });
 
   ngOnInit(): void {
     this.load();
@@ -234,7 +267,7 @@ export class DocumentDetailComponent implements OnInit {
     this.docSvc.getDocumentOcrResult(patientId, documentId).subscribe({
       next: (result) => {
         this.document.set(result);
-        this.entityGroups.set(this.groupByType(result.entities));
+        this.loadBlobUrl();
         this.loading.set(false);
       },
       error: () => {
@@ -248,13 +281,27 @@ export class DocumentDetailComponent implements OnInit {
     return STATUS_SEVERITY[status] ?? 'secondary';
   }
 
-  private groupByType(entities: NerEntity[]): Record<string, NerEntity[]> {
-    return entities.reduce(
-      (acc, e) => {
-        (acc[e.type] ??= []).push(e);
-        return acc;
+  formatConfidence(score: number | null): string {
+    return score !== null ? score.toFixed(1) + '%' : '';
+  }
+
+  ngOnDestroy(): void {
+    const url = this.blobUrl();
+    if (url) URL.revokeObjectURL(url);
+  }
+
+  private loadBlobUrl(): void {
+    const url = this.rawDocumentUrl();
+    if (!url) return;
+    this.blobLoading.set(true);
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const existing = this.blobUrl();
+        if (existing) URL.revokeObjectURL(existing);
+        this.blobUrl.set(URL.createObjectURL(blob));
+        this.blobLoading.set(false);
       },
-      {} as Record<string, NerEntity[]>,
-    );
+      error: () => this.blobLoading.set(false),
+    });
   }
 }

@@ -82,6 +82,7 @@ class NerService:
                 for ent in entities:
                     ent["start_offset"] += char_offset
                     ent["end_offset"]   += char_offset
+                    ent["page_number"]  = page_index + 1   # 1-based, matches OcrPageResult.pageNumber
                 results.extend(entities)
                 char_offset += len(chunk)
 
