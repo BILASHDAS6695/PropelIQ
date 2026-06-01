@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthStore, AuthUser } from './auth.store';
@@ -49,7 +49,7 @@ export class AuthService {
           };
           this.store.setUser(user);
           this.token.set(res.accessToken);
-          sessionStorage.setItem('auth_userId', payload.sub);
+          localStorage.setItem('auth_userId', payload.sub);
           localStorage.setItem('refresh_token', res.refreshToken);
           return { passwordChangeRequired: res.passwordChangeRequired ?? false };
         }),
@@ -57,8 +57,12 @@ export class AuthService {
   }
 
   refresh(): Observable<void> {
-    const userId = sessionStorage.getItem('auth_userId') ?? '';
+    const userId = localStorage.getItem('auth_userId') ?? '';
     const refreshToken = localStorage.getItem('refresh_token') ?? '';
+
+    if (!userId || !refreshToken) {
+      return throwError(() => new Error('No credentials available for token refresh'));
+    }
 
     return this.http
       .post<{
@@ -70,7 +74,7 @@ export class AuthService {
         map((res) => {
           const payload = this.decodeJwtPayload(res.accessToken);
           this.token.set(res.accessToken);
-          sessionStorage.setItem('auth_userId', payload.sub);
+          localStorage.setItem('auth_userId', payload.sub);
           localStorage.setItem('refresh_token', res.refreshToken);
         }),
       );
@@ -92,7 +96,7 @@ export class AuthService {
   clearAuthState(): void {
     this.store.clearUser();
     this.token.set(null);
-    sessionStorage.removeItem('auth_userId');
+    localStorage.removeItem('auth_userId');
     localStorage.removeItem('refresh_token');
   }
 

@@ -12,7 +12,7 @@ namespace HealthPlatform.Infrastructure.Security;
 
 internal sealed class JwtTokenService : IJwtTokenService
 {
-    private const int AccessTokenMinutes     = 30;
+    private const int AccessTokenMinutes     = 60;
     private const int RefreshTokenDays       = 7;
     private const int RefreshTokenByteLength = 32; // 256-bit → 44-char Base64
 

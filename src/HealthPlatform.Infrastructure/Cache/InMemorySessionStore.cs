@@ -12,7 +12,7 @@ namespace HealthPlatform.Infrastructure.Cache;
 /// </summary>
 internal sealed class InMemorySessionStore : ISessionStore
 {
-    private static readonly TimeSpan SessionTtl = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan SessionTtl = TimeSpan.FromHours(1);
 
     private sealed record Entry(SessionState Session, DateTimeOffset ExpiresAt);
 

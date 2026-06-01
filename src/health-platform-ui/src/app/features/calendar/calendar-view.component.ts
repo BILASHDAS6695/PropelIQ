@@ -491,14 +491,12 @@ export class CalendarViewComponent implements OnInit {
   }
 
   protected goToCancel(appt: CalendarAppointmentDto): void {
-    this.drawerVisible = false;
     void this.router.navigate(['/booking/appointments'], {
       queryParams: { cancel: appt.appointmentId },
     });
   }
 
   protected goToReschedule(appt: CalendarAppointmentDto): void {
-    this.drawerVisible = false;
     void this.router.navigate(['/booking'], {
       queryParams: { reschedule: appt.appointmentId },
     });

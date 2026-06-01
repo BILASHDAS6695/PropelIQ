@@ -637,3 +637,13 @@ BEGIN
             ADD COLUMN entities jsonb NULL;
     END IF;
 END $EF$;
+
+-- ============================================================
+-- Intake Records — add status, reviewed_at, reviewed_by_provider_id
+-- (columns present in the domain entity but missing from initial migration)
+-- ============================================================
+
+ALTER TABLE intake_records
+    ADD COLUMN IF NOT EXISTS status                   text NOT NULL DEFAULT 'Draft',
+    ADD COLUMN IF NOT EXISTS reviewed_at              timestamp with time zone,
+    ADD COLUMN IF NOT EXISTS reviewed_by_provider_id  uuid;

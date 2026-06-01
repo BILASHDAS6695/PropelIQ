@@ -20,6 +20,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { ALLERGY_SUGGESTIONS, IntakeFormStore, MEDICATION_SUGGESTIONS } from '../intake-form.store';
 import { IntakeModeToggleComponent } from '../intake-mode-toggle/intake-mode-toggle.component';
+import { ToastService } from '../../../shared/services/toast.service';
 
 const COMMON_SYMPTOMS = [
   'Headache',
@@ -349,6 +350,7 @@ export class IntakeLandingComponent implements OnInit, OnDestroy {
   protected readonly commonSymptoms = COMMON_SYMPTOMS;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected chiefComplaint = '';
   protected selectedSymptoms: string[] = [];
@@ -417,7 +419,10 @@ export class IntakeLandingComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.store.markSubmitted();
+      this.toast.error(
+        'No Appointment Selected',
+        'Please start your intake from the My Appointments page.',
+      );
     }
   }
 

@@ -4,7 +4,7 @@ using HealthPlatform.Application.Features.Auth;
 
 /// <summary>
 /// Manages user session tokens in the distributed cache.
-/// Sessions expire after 15 minutes of inactivity (sliding expiration).
+/// Sessions expire after 60 minutes of inactivity (sliding expiration).
 /// </summary>
 public interface ISessionStore
 {
