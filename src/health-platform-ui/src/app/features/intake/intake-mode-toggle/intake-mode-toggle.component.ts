@@ -45,8 +45,7 @@ export class IntakeModeToggleComponent {
       this.formStore.prefill(collected);
     }
     const appointmentId =
-      this.route.snapshot.queryParamMap.get('appointmentId') ??
-      this.chatStore.appointmentId();
+      this.route.snapshot.queryParamMap.get('appointmentId') ?? this.chatStore.appointmentId();
     void this.router.navigate(['/intake/form'], {
       queryParams: appointmentId ? { appointmentId } : {},
     });

@@ -24,10 +24,14 @@ type BookingStep = 'provider' | 'slot' | 'form' | 'confirmation';
   template: `
     <div class="booking-page p-3" style="max-width:900px;margin:0 auto">
       @if (rescheduleId()) {
-        <div class="flex align-items-center gap-2 mb-3 p-3 surface-100 border-round border-left-3 border-primary">
+        <div
+          class="flex align-items-center gap-2 mb-3 p-3 surface-100 border-round border-left-3 border-primary"
+        >
           <i class="pi pi-calendar-clock text-primary text-xl"></i>
           <span class="font-semibold text-lg">Reschedule Appointment</span>
-          <span class="text-color-secondary text-sm ml-1">— select a new provider and time slot</span>
+          <span class="text-color-secondary text-sm ml-1"
+            >— select a new provider and time slot</span
+          >
         </div>
       }
       <!-- Step indicator -->
