@@ -8,6 +8,7 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -225,6 +226,7 @@ const QUICK_REPLIES = [
 })
 export class IntakeChatComponent implements OnInit, AfterViewChecked {
   protected readonly store = inject(IntakeChatStore);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef<HTMLElement>;
 
@@ -237,7 +239,8 @@ export class IntakeChatComponent implements OnInit, AfterViewChecked {
 
   async ngOnInit(): Promise<void> {
     if (this.store.messages().length === 0) {
-      await this.store.startSession();
+      const appointmentId = this.route.snapshot.queryParamMap.get('appointmentId') ?? undefined;
+      await this.store.startSession(undefined, appointmentId);
     }
   }
 

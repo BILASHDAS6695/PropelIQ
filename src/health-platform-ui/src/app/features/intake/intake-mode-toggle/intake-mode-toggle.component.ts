@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { IntakeChatStore } from '../intake-chat.store';
 import { IntakeFormStore } from '../intake-form.store';
@@ -30,6 +30,7 @@ import { IntakeFormStore } from '../intake-form.store';
 })
 export class IntakeModeToggleComponent {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly chatStore = inject(IntakeChatStore);
   private readonly formStore = inject(IntakeFormStore);
 
@@ -43,7 +44,11 @@ export class IntakeModeToggleComponent {
     if (Object.values(collected).some((v) => v !== null)) {
       this.formStore.prefill(collected);
     }
-    void this.router.navigate(['/intake/form']);
+    const appointmentId =
+      this.route.snapshot.queryParamMap.get('appointmentId') ?? this.chatStore.appointmentId();
+    void this.router.navigate(['/intake/form'], {
+      queryParams: appointmentId ? { appointmentId } : {},
+    });
   }
 
   protected switchToChat(): void {

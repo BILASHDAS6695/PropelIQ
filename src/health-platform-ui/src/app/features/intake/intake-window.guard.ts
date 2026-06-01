@@ -6,11 +6,20 @@ import { IntakeWindowService } from '../../core/services/intake-window.service';
 
 export const intakeWindowGuard: CanActivateFn = async (route) => {
   const appointmentId = route.queryParamMap.get('appointmentId');
-  if (!appointmentId) return true;
-
-  const windowSvc = inject(IntakeWindowService);
   const toast = inject(MessageService);
   const router = inject(Router);
+
+  if (!appointmentId) {
+    toast.add({
+      severity: 'warn',
+      summary: 'No Appointment Selected',
+      detail: 'Please start your intake from the My Appointments page.',
+      life: 5000,
+    });
+    return router.parseUrl('/booking/appointments');
+  }
+
+  const windowSvc = inject(IntakeWindowService);
 
   try {
     const result = await firstValueFrom(windowSvc.check(appointmentId));
@@ -21,7 +30,7 @@ export const intakeWindowGuard: CanActivateFn = async (route) => {
         detail: result.reason ?? 'The intake period for this appointment has ended.',
         life: 5000,
       });
-      return router.parseUrl('/intake');
+      return router.parseUrl('/booking/appointments');
     }
     return true;
   } catch {

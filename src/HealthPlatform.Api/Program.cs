@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using System.Text;
+using System.Text.Json.Serialization;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -44,7 +45,9 @@ try
     builder.Services.AddScoped<IInAppNotifier, SignalRInAppNotifier>();
 
     // API services
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddJsonOptions(o =>
+            o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {

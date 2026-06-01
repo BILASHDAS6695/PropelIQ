@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using HealthPlatform.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,8 @@ internal sealed class SessionValidationMiddleware
             return;
         }
 
-        var sub = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var sub = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
         if (!Guid.TryParse(sub, out var userId))
         {
             await WriteSessionExpiredAsync(context);

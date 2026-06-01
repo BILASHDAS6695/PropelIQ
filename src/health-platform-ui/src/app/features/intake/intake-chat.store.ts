@@ -14,6 +14,7 @@ export interface ChatMessage {
 interface IntakeChatState {
   messages: ChatMessage[];
   sessionId: string | null;
+  appointmentId: string | null;
   isLoading: boolean;
   isComplete: boolean;
   collected: Record<string, string | null>;
@@ -23,6 +24,7 @@ interface IntakeChatState {
 const initialState: IntakeChatState = {
   messages: [],
   sessionId: null,
+  appointmentId: null,
   isLoading: false,
   isComplete: false,
   collected: {},
@@ -40,7 +42,7 @@ export const IntakeChatStore = signalStore(
       router = inject(Router),
     ) => ({
       async startSession(patientId?: string, appointmentId?: string): Promise<void> {
-        patchState(store, { isLoading: true });
+        patchState(store, { isLoading: true, appointmentId: appointmentId ?? null });
         try {
           const response = await firstValueFrom(
             intakeSvc.chat({ message: '', patientId, appointmentId }),
@@ -86,7 +88,10 @@ export const IntakeChatStore = signalStore(
 
           if (response.fallbackRequired) {
             toast.warn('Notice', 'Switching to form-based intake.');
-            void router.navigate(['/intake/form']);
+            const aid = store.appointmentId();
+            void router.navigate(['/intake/form'], {
+              queryParams: aid ? { appointmentId: aid } : {},
+            });
           }
         } catch {
           patchState(store, {
