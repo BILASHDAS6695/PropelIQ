@@ -478,8 +478,7 @@ For major enhancements requiring complete requirements specification and archite
     │   │
     │   └── /generate-figma
     │           Output: Figma artifacts (structures, exports)
-    │
-    └── /create-test-plan [--scope full|critical|regression|feature:<name>]
+    │/create-test-plan [--scope full|critical|regression|feature:<name>]
         │   Output: test_plan_[feature].md (test cases, traceability)
         │
         └── /create-automation-test [--type feature|e2e|both]
@@ -487,6 +486,7 @@ For major enhancements requiring complete requirements specification and archite
             │
             └── /generate-playwright-scripts [--type feature|e2e|both]
                     Output: test-automation/ (Playwright TypeScript scripts, page objects)
+    └── 
 ```
 
 ### Bug Resolution Track
